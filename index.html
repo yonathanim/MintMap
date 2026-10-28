@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="MintMap is a focused personal finance tracking experience.">
+    <title>MintMap — Your money. Your direction.</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-header">
+      <div class="container header-content">
+        <a class="brand" href="/" aria-label="MintMap home">
+          <span class="brand-mark" aria-hidden="true">M</span>
+          <span>
+            <strong>MintMap</strong>
+            <span class="brand-tagline">Your money. Your direction.</span>
+          </span>
+        </a>
+        <p class="privacy-note">Private by design</p>
+      </div>
+    </header>
+
+    <main id="main-content" class="container page-content">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Personal finance, clarified</p>
+        <h1 id="page-title">A clearer direction for your money.</h1>
+        <p class="intro-copy">
+          Track income and spending in one calm, focused space. Your information stays in this browser.
+        </p>
+      </section>
+
+      <section class="summary-grid" aria-labelledby="summary-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">At a glance</p>
+            <h2 id="summary-heading">Your overview</h2>
+          </div>
+          <span class="period-label">All time</span>
+        </div>
+        <div class="summary-cards">
+          <article class="summary-card">
+            <p class="card-label">Total balance</p>
+            <p class="card-value">ETB 0.00</p>
+            <p class="card-hint">No transactions yet</p>
+          </article>
+          <article class="summary-card">
+            <p class="card-label">Income</p>
+            <p class="card-value">ETB 0.00</p>
+            <p class="card-hint">No income recorded</p>
+          </article>
+          <article class="summary-card">
+            <p class="card-label">Expenses</p>
+            <p class="card-value">ETB 0.00</p>
+            <p class="card-hint">No expenses recorded</p>
+          </article>
+        </div>
+      </section>
+
+      <div class="content-grid">
+        <section class="panel transaction-panel" aria-labelledby="transaction-form-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Keep it current</p>
+              <h2 id="transaction-form-heading">Add a transaction</h2>
+            </div>
+          </div>
+          <form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="transaction-type">Type</label>
+                <select id="transaction-type" name="type">
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="transaction-amount">Amount <span aria-hidden="true">*</span></label>
+                <div class="input-with-prefix">
+                  <span aria-hidden="true">ETB</span>
+                  <input id="transaction-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+                </div>
+              </div>
+              <div class="field">
+                <label for="transaction-date">Date <span aria-hidden="true">*</span></label>
+                <input id="transaction-date" name="date" type="date" required>
+              </div>
+              <div class="field">
+                <label for="transaction-category">Category <span aria-hidden="true">*</span></label>
+                <select id="transaction-category" name="category" required>
+                  <option value="">Select category</option>
+                </select>
+              </div>
+              <div class="field field-wide">
+                <label for="transaction-description">Description <span aria-hidden="true">*</span></label>
+                <input id="transaction-description" name="description" type="text" placeholder="What was this for?" required>
+              </div>
+              <div class="field field-wide">
+                <label for="transaction-notes">Notes <span class="optional">(optional)</span></label>
+                <textarea id="transaction-notes" name="notes" rows="3" placeholder="Add context if useful"></textarea>
+              </div>
+            </div>
+            <button class="button button-primary" type="submit">Save transaction</button>
+          </form>
+        </section>
+
+        <section class="panel visualization-panel" aria-labelledby="visualization-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Where it goes</p>
+              <h2 id="visualization-heading">Spending by category</h2>
+            </div>
+          </div>
+          <div class="empty-state" role="status">
+            <span class="empty-icon" aria-hidden="true">∿</span>
+            <h3>No spending to show yet</h3>
+            <p>Your expense patterns will appear here once you add transactions.</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel transactions-section" aria-labelledby="transactions-heading">
+        <div class="section-heading section-heading-stack">
+          <div>
+            <p class="eyebrow">Your activity</p>
+            <h2 id="transactions-heading">Transactions</h2>
+          </div>
+          <div class="filter-controls" aria-label="Transaction filters">
+            <div class="field">
+              <label for="transaction-search">Search</label>
+              <input id="transaction-search" type="search" placeholder="Search transactions">
+            </div>
+            <div class="field">
+              <label for="filter-category">Filter by category</label>
+              <select id="filter-category">
+                <option value="">All categories</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state empty-state-compact" role="status">
+          <span class="empty-icon" aria-hidden="true">○</span>
+          <h3>Your transaction list is empty</h3>
+          <p>Add your first transaction above to start finding your direction.</p>
+        </div>
+      </section>
+
+      <section class="sample-data-banner" aria-labelledby="sample-data-heading">
+        <div>
+          <p class="eyebrow">Explore the experience</p>
+          <h2 id="sample-data-heading">Want to see MintMap in action?</h2>
+          <p>Load fictional sample transactions to explore the dashboard. They will always be clearly marked as sample data.</p>
+        </div>
+        <button class="button button-secondary" type="button">Load sample data</button>
+      </section>
+
+      <section class="panel category-section" aria-labelledby="categories-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Stay organized</p>
+            <h2 id="categories-heading">Categories</h2>
+          </div>
+          <button class="button button-secondary" type="button">Add category</button>
+        </div>
+        <p class="section-description">Create categories that make your spending easier to understand.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>MintMap · Your data stays in your browser.</p>
+      </div>
+    </footer>
+  </body>
+</html>
