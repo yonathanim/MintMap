@@ -1,0 +1,22 @@
+
+# Private planning documents
+docs/
+
+# Dependencies
+node_modules/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
