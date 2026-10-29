@@ -49,11 +49,20 @@
           <a class="nav-link" href="#categories-heading">Categories</a>
         </nav>
         <div class="header-actions">
-          <label class="header-search">
-            <svg class="search-icon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <span class="sr-only">Search transactions</span>
-            <input id="header-search" type="search" placeholder="Search…" aria-label="Search transactions">
-          </label>
+          <div class="header-search-wrap">
+            <label class="header-search">
+              <svg class="search-icon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <span class="sr-only">Search transactions</span>
+              <input id="header-search" type="search" placeholder="Search transactions…" aria-label="Search transactions" autocomplete="off">
+            </label>
+            <div id="header-search-dropdown" class="search-live-dropdown" hidden role="region" aria-label="Search matches">
+              <div class="search-live-head">
+                <span id="search-live-count" class="search-live-count">0 matches</span>
+                <button id="search-live-clear" class="search-live-clear" type="button">Clear</button>
+              </div>
+              <div id="search-live-results" class="search-live-results"></div>
+            </div>
+          </div>
           <button id="mobile-search-toggle" class="utility-button mobile-search-btn" type="button" aria-label="Search transactions" aria-expanded="false" aria-controls="mobile-search-panel">
             <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </button>
@@ -61,11 +70,14 @@
             <button id="notification-toggle" class="utility-button" type="button" aria-label="Open financial insights" aria-expanded="false" aria-controls="notification-panel">
               <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span>Insights</span>
-              <span id="notification-badge" class="notification-badge" aria-label="insights available" hidden></span>
+              <span id="notification-badge" class="notification-badge" aria-label="insights available">0</span>
             </button>
             <div id="notification-panel" class="notification-panel" role="dialog" aria-label="Financial insights" hidden>
               <div class="notification-panel-head">
-                <strong>Financial Insights</strong>
+                <div class="notification-head-titles">
+                  <strong>Financial Insights</strong>
+                  <span id="notification-active-count" class="notification-active-count">0 active</span>
+                </div>
                 <button id="notification-close" class="notification-close-btn" type="button" aria-label="Close insights panel">
                   <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -85,7 +97,14 @@
           <span class="sr-only">Search transactions</span>
           <input id="mobile-search-input" type="search" placeholder="Search transactions…" aria-label="Search transactions" autocomplete="off">
         </label>
-        <button id="mobile-search-close" class="button button-secondary mobile-search-cancel" type="button">Cancel</button>
+        <button id="mobile-search-close" class="button button-secondary mobile-search-cancel" type="button">Close</button>
+      </div>
+      <div id="mobile-search-dropdown" class="search-live-dropdown mobile-live-dropdown" hidden role="region" aria-label="Mobile search matches">
+        <div class="search-live-head">
+          <span id="mobile-search-live-count" class="search-live-count">0 matches</span>
+          <button id="mobile-search-live-clear" class="search-live-clear" type="button">Clear</button>
+        </div>
+        <div id="mobile-search-live-results" class="search-live-results"></div>
       </div>
     </div>
 
@@ -101,28 +120,62 @@
       </section>
 
       <section class="summary-grid" aria-labelledby="summary-heading">
-        <div class="section-heading">
+        <div class="section-heading section-heading-overview">
           <div>
             <p class="eyebrow">At a glance</p>
             <h2 id="summary-heading">Your overview</h2>
           </div>
-          <span class="period-label">All time</span>
+          <div class="overview-heading-controls">
+            <div class="chart-tab-group" role="tablist" aria-label="Overview chart mode">
+              <button id="chart-tab-flow" class="chart-tab active" type="button" role="tab" aria-selected="true">Cash Flow</button>
+              <button id="chart-tab-categories" class="chart-tab" type="button" role="tab" aria-selected="false">By Category</button>
+            </div>
+            <span class="period-label">All time</span>
+          </div>
         </div>
-        <div class="summary-cards">
-          <article class="summary-card">
-            <div class="card-topline"><p class="card-label">Total balance</p><span class="card-icon" aria-hidden="true">↗</span></div>
-            <p id="balance-value" class="card-value">ETB 0.00</p>
-            <p id="balance-hint" class="card-hint">No transactions yet</p>
-          </article>
-          <article class="summary-card">
-            <div class="card-topline"><p class="card-label">Income</p><span class="card-icon income-icon" aria-hidden="true">↑</span></div>
-            <p id="income-value" class="card-value">ETB 0.00</p>
-            <p id="income-hint" class="card-hint">No income recorded</p>
-          </article>
-          <article class="summary-card">
-            <div class="card-topline"><p class="card-label">Expenses</p><span class="card-icon expense-icon" aria-hidden="true">↓</span></div>
-            <p id="expense-value" class="card-value">ETB 0.00</p>
-            <p id="expense-hint" class="card-hint">No expenses recorded</p>
+
+        <div class="overview-container">
+          <div class="summary-cards">
+            <article class="summary-card" id="card-total-balance">
+              <div class="card-topline"><p class="card-label">Total balance</p><span class="card-icon" aria-hidden="true">↗</span></div>
+              <p id="balance-value" class="card-value">ETB 0.00</p>
+              <p id="balance-hint" class="card-hint">No transactions yet</p>
+            </article>
+            <article class="summary-card" id="card-income">
+              <div class="card-topline"><p class="card-label">Income</p><span class="card-icon income-icon" aria-hidden="true">↑</span></div>
+              <p id="income-value" class="card-value">ETB 0.00</p>
+              <p id="income-hint" class="card-hint">No income recorded</p>
+            </article>
+            <article class="summary-card" id="card-expenses">
+              <div class="card-topline"><p class="card-label">Expenses</p><span class="card-icon expense-icon" aria-hidden="true">↓</span></div>
+              <p id="expense-value" class="card-value">ETB 0.00</p>
+              <p id="expense-hint" class="card-hint">No expenses recorded</p>
+            </article>
+          </div>
+
+          <!-- Overview Donut & Pie Chart Card -->
+          <article class="overview-chart-card" aria-label="Cash flow distribution breakdown">
+            <div class="overview-chart-head">
+              <div>
+                <h3 id="overview-chart-title" class="overview-chart-title">Cash Flow Ratio</h3>
+                <p id="overview-chart-sub" class="overview-chart-sub">Balance, Income & Outflow</p>
+              </div>
+              <span id="chart-savings-badge" class="chart-savings-badge">0% Saved</span>
+            </div>
+            <div class="overview-chart-body">
+              <div class="chart-visual-container">
+                <svg id="overview-pie-svg" class="overview-pie-svg" viewBox="0 0 200 200" width="150" height="150" role="img" aria-label="Donut chart showing financial distribution">
+                  <!-- SVG elements rendered dynamically -->
+                </svg>
+                <div class="chart-center-info">
+                  <span id="chart-center-val" class="chart-center-val">0%</span>
+                  <span id="chart-center-txt" class="chart-center-txt">Saved</span>
+                </div>
+              </div>
+              <div id="overview-chart-legend" class="overview-chart-legend" aria-label="Chart legend details">
+                <!-- Dynamically populated legend items -->
+              </div>
+            </div>
           </article>
         </div>
       </section>
@@ -162,8 +215,8 @@
                 </select>
               </div>
               <div class="field field-wide">
-                <label for="transaction-description">Description <span aria-hidden="true">*</span></label>
-                <input id="transaction-description" name="description" type="text" placeholder="What was this for?" required>
+                <label for="transaction-description">Description <span class="optional">(optional)</span></label>
+                <input id="transaction-description" name="description" type="text" placeholder="What was this for? (e.g. Groceries, Rent, or leave blank)">
               </div>
               <div class="field field-wide">
                 <label for="transaction-notes">Notes <span class="optional">(optional)</span></label>
