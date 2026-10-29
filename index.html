@@ -44,18 +44,18 @@
         <div class="summary-cards">
           <article class="summary-card">
             <p class="card-label">Total balance</p>
-            <p class="card-value">ETB 0.00</p>
-            <p class="card-hint">No transactions yet</p>
+            <p id="balance-value" class="card-value">ETB 0.00</p>
+            <p id="balance-hint" class="card-hint">No transactions yet</p>
           </article>
           <article class="summary-card">
             <p class="card-label">Income</p>
-            <p class="card-value">ETB 0.00</p>
-            <p class="card-hint">No income recorded</p>
+            <p id="income-value" class="card-value">ETB 0.00</p>
+            <p id="income-hint" class="card-hint">No income recorded</p>
           </article>
           <article class="summary-card">
             <p class="card-label">Expenses</p>
-            <p class="card-value">ETB 0.00</p>
-            <p class="card-hint">No expenses recorded</p>
+            <p id="expense-value" class="card-value">ETB 0.00</p>
+            <p id="expense-hint" class="card-hint">No expenses recorded</p>
           </article>
         </div>
       </section>
@@ -68,7 +68,7 @@
               <h2 id="transaction-form-heading">Add a transaction</h2>
             </div>
           </div>
-          <form>
+          <form id="transaction-form" novalidate>
             <div class="form-grid">
               <div class="field">
                 <label for="transaction-type">Type</label>
@@ -103,7 +103,10 @@
                 <textarea id="transaction-notes" name="notes" rows="3" placeholder="Add context if useful"></textarea>
               </div>
             </div>
-            <button class="button button-primary" type="submit">Save transaction</button>
+            <div class="form-actions">
+              <button id="transaction-submit" class="button button-primary" type="submit">Save transaction</button>
+              <button id="transaction-cancel" class="button button-secondary" type="button" hidden>Cancel edit</button>
+            </div>
           </form>
         </section>
 
@@ -140,12 +143,15 @@
               </select>
             </div>
           </div>
+          <button id="clear-filters" class="button button-secondary clear-filters" type="button" hidden>Clear filters</button>
         </div>
-        <div class="empty-state empty-state-compact" role="status">
+        <div id="transaction-empty-state" class="empty-state empty-state-compact" role="status">
           <span class="empty-icon" aria-hidden="true">○</span>
           <h3>Your transaction list is empty</h3>
           <p>Add your first transaction above to start finding your direction.</p>
         </div>
+        <div id="transaction-list" class="transaction-list" aria-live="polite"></div>
+        <p id="transaction-no-results" class="no-results" role="status" hidden>No transactions match the current search and category filter.</p>
       </section>
 
       <section class="sample-data-banner" aria-labelledby="sample-data-heading">
@@ -154,7 +160,7 @@
           <h2 id="sample-data-heading">Want to see MintMap in action?</h2>
           <p>Load fictional sample transactions to explore the dashboard. They will always be clearly marked as sample data.</p>
         </div>
-        <button class="button button-secondary" type="button">Load sample data</button>
+        <button id="load-sample-data" class="button button-secondary" type="button">Load sample data</button>
       </section>
 
       <section class="panel category-section" aria-labelledby="categories-heading">
@@ -163,9 +169,28 @@
             <p class="eyebrow">Stay organized</p>
             <h2 id="categories-heading">Categories</h2>
           </div>
-          <button class="button button-secondary" type="button">Add category</button>
+          <button id="add-category" class="button button-secondary" type="button">Add category</button>
         </div>
         <p class="section-description">Create categories that make your spending easier to understand.</p>
+        <form id="category-form" class="category-form" hidden>
+          <div class="field">
+            <label for="category-name">Category name</label>
+            <input id="category-name" name="category-name" type="text" maxlength="40" required>
+          </div>
+          <div class="field">
+            <label for="category-type">Category applies to</label>
+            <select id="category-type" name="category-type">
+              <option value="expense">Expenses</option>
+              <option value="income">Income</option>
+              <option value="both">Income and expenses</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button class="button button-primary" type="submit">Save category</button>
+            <button id="cancel-category" class="button button-secondary" type="button">Cancel</button>
+          </div>
+        </form>
+        <div id="category-list" class="category-list"></div>
       </section>
     </main>
 
