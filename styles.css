@@ -541,163 +541,6 @@ textarea:focus-visible {
   color: var(--text);
 }
 
-/* ── Notification badge ── */
-.notification-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.15rem;
-  height: 1.15rem;
-  padding: 0 0.3rem;
-  border-radius: 99rem;
-  background: var(--mint);
-  color: #0a201a;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-/* ── Notification / Insights panel ── */
-.notification-panel {
-  position: absolute;
-  z-index: 200;
-  top: calc(100% + 0.6rem);
-  right: 0;
-  width: 18rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  animation: panel-pop 180ms ease both;
-}
-
-@keyframes panel-pop {
-  from { opacity: 0; transform: translateY(-0.4rem) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.notification-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 0.85rem 0.7rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.notification-panel-head strong {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.notification-close-btn {
-  display: grid;
-  width: 1.6rem;
-  height: 1.6rem;
-  place-items: center;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
-}
-
-.notification-close-btn:hover {
-  background: var(--surface-raised);
-  color: var(--text);
-}
-
-.notification-list {
-  padding: 0.55rem;
-}
-
-/* ── Individual insight item ── */
-.notification-item {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  padding: 0.65rem 0.6rem;
-  border-radius: 0.6rem;
-  transition: background 160ms ease;
-}
-
-.notification-item:hover {
-  background: var(--surface-raised);
-}
-
-.notification-item + .notification-item {
-  border-top: 1px solid rgba(154, 169, 163, 0.1);
-}
-
-.notification-item-icon {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  place-items: center;
-  border-radius: 0.5rem;
-  background: var(--accent-soft);
-  color: var(--mint);
-  font-size: 0.82rem;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.notification-item--positive .notification-item-icon {
-  background: rgba(77, 217, 160, 0.1);
-  color: var(--mint);
-}
-
-.notification-item--warning .notification-item-icon {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-
-.notification-item--info .notification-item-icon {
-  background: rgba(100, 160, 240, 0.1);
-  color: #78b4f5;
-}
-
-.notification-item--neutral .notification-item-icon {
-  background: var(--surface-raised);
-  color: var(--muted);
-}
-
-.notification-item-text {
-  min-width: 0;
-}
-
-.notification-item-text strong {
-  display: block;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.15rem;
-}
-
-.notification-item-text p {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.notification-empty {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 0.4rem;
-  padding: 1.5rem 1rem;
-  text-align: center;
-}
-
-.notification-empty p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -894,52 +737,6 @@ h3 {
 
 .section-heading-stack {
   flex-wrap: wrap;
-}
-
-.section-heading-overview {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.overview-heading-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.chart-tab-group {
-  display: inline-flex;
-  padding: 0.2rem;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: 99rem;
-  gap: 0.15rem;
-}
-
-.chart-tab {
-  padding: 0.3rem 0.75rem;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 99rem;
-  cursor: pointer;
-  transition: all 160ms ease;
-  white-space: nowrap;
-}
-
-.chart-tab:hover {
-  color: var(--text);
-}
-
-.chart-tab.active {
-  background: var(--mint);
-  color: #0c1813;
-  box-shadow: 0 2px 8px rgba(77, 217, 160, 0.25);
 }
 
 .overview-container {
@@ -1246,6 +1043,12 @@ h3 {
   padding: 1.25rem;
   border-radius: 1rem;
   box-shadow: var(--shadow-soft);
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.transaction-panel.is-editing {
+  border-color: var(--mint) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mint) 25%, transparent), 0 1rem 3rem rgba(0, 0, 0, 0.28) !important;
 }
 
 .form-grid {
