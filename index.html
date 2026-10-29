@@ -13,13 +13,18 @@
     <header class="site-header">
       <div class="container header-content">
         <a class="brand" href="/" aria-label="MintMap home">
-          <span class="brand-mark" aria-hidden="true">M</span>
+          <span class="brand-mark" aria-hidden="true"><span>M</span></span>
           <span>
             <strong>MintMap</strong>
             <span class="brand-tagline">Your money. Your direction.</span>
           </span>
         </a>
-        <p class="privacy-note">Private by design</p>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a class="nav-link active" href="#summary-heading">Overview</a>
+          <a class="nav-link" href="#transactions-heading">Activity</a>
+          <a class="nav-link" href="#categories-heading">Categories</a>
+        </nav>
+        <div class="privacy-note"><span class="status-dot" aria-hidden="true"></span><span>Private by design</span></div>
       </div>
     </header>
 
@@ -30,6 +35,11 @@
         <p class="intro-copy">
           Track income and spending in one calm, focused space. Your information stays in this browser.
         </p>
+        <div class="intro-highlights" aria-label="MintMap highlights">
+          <span><i aria-hidden="true"></i> Local-first</span>
+          <span><i aria-hidden="true"></i> ETB ready</span>
+          <span><i aria-hidden="true"></i> Built for clarity</span>
+        </div>
         <p id="app-status" class="app-status" role="status" aria-live="polite"></p>
       </section>
 
@@ -43,17 +53,17 @@
         </div>
         <div class="summary-cards">
           <article class="summary-card">
-            <p class="card-label">Total balance</p>
+            <div class="card-topline"><p class="card-label">Total balance</p><span class="card-icon" aria-hidden="true">↗</span></div>
             <p id="balance-value" class="card-value">ETB 0.00</p>
             <p id="balance-hint" class="card-hint">No transactions yet</p>
           </article>
           <article class="summary-card">
-            <p class="card-label">Income</p>
+            <div class="card-topline"><p class="card-label">Income</p><span class="card-icon income-icon" aria-hidden="true">↑</span></div>
             <p id="income-value" class="card-value">ETB 0.00</p>
             <p id="income-hint" class="card-hint">No income recorded</p>
           </article>
           <article class="summary-card">
-            <p class="card-label">Expenses</p>
+            <div class="card-topline"><p class="card-label">Expenses</p><span class="card-icon expense-icon" aria-hidden="true">↓</span></div>
             <p id="expense-value" class="card-value">ETB 0.00</p>
             <p id="expense-hint" class="card-hint">No expenses recorded</p>
           </article>
@@ -114,14 +124,16 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">Where it goes</p>
-              <h2 id="visualization-heading">Spending by category</h2>
+              <h2 id="visualization-heading">All-time spending by category</h2>
             </div>
           </div>
-          <div class="empty-state" role="status">
+          <div id="visualization-empty-state" class="empty-state" role="status">
             <span class="empty-icon" aria-hidden="true">∿</span>
             <h3>No spending to show yet</h3>
-            <p>Your expense patterns will appear here once you add transactions.</p>
+            <p>Add an expense to see your spending patterns here.</p>
           </div>
+          <div id="spending-visualization" class="spending-visualization" aria-label="All-time expenses grouped by category"></div>
+          <div id="spending-text-summary" class="spending-text-summary" aria-live="polite"></div>
         </section>
       </div>
 
