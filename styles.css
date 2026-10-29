@@ -285,14 +285,14 @@ textarea:focus-visible {
   border: 1px solid rgba(176, 248, 223, 0.52);
   border-radius: 0.85rem;
   background: var(--mint);
-  color: #ffffff;
+  color: #0d2b20;
   font-weight: 800;
   box-shadow: 0 0 0 0.35rem rgba(119, 230, 193, 0.08), 0 0.6rem 1.5rem rgba(119, 230, 193, 0.2);
-  transform: rotate(-6deg);
+  flex-shrink: 0;
 }
 
-.brand-mark span {
-  transform: rotate(6deg);
+.brand-mark svg {
+  display: block;
 }
 
 .brand strong {
@@ -335,9 +335,9 @@ textarea:focus-visible {
   gap: 0.25rem;
   margin-left: clamp(1rem, 5vw, 4rem);
   padding: 0.3rem;
-  border: 1px solid rgba(157, 168, 197, 0.13);
+  border: 1px solid var(--border);
   border-radius: 99rem;
-  background: rgba(20, 26, 45, 0.72);
+  background: var(--surface-muted);
 }
 
 .nav-link {
@@ -431,6 +431,17 @@ h3 {
 }
 
 .app-status[data-status="error"] {
+  color: var(--danger);
+}
+
+.form-status {
+  min-height: 1.25rem;
+  margin: 0.75rem 0 0;
+  color: var(--mint);
+  font-size: 0.82rem;
+}
+
+.form-status[data-status="error"] {
   color: var(--danger);
 }
 
@@ -830,7 +841,7 @@ select {
 
 .transaction-item:hover {
   border-color: rgba(119, 230, 193, 0.3);
-  background: rgba(28, 37, 65, 0.88);
+  background: var(--accent-soft);
   transform: translateY(-0.1rem);
 }
 
@@ -897,7 +908,7 @@ select {
 }
 
 .transaction-amount-expense {
-  color: var(--text);
+  color: var(--danger);
 }
 
 .transaction-actions {
