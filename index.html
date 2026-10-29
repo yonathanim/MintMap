@@ -5,7 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="MintMap is a focused personal finance tracking experience.">
     <title>MintMap — Your money. Your direction.</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
+    <script>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem("mintmap.theme");
+          if (savedTheme === "light" || savedTheme === "dark") {
+            document.documentElement.dataset.theme = savedTheme;
+          }
+        } catch {
+          // CSS prefers the system theme when storage is unavailable.
+        }
+      })();
+    </script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -13,7 +26,7 @@
     <header class="site-header">
       <div class="container header-content">
         <a class="brand" href="/" aria-label="MintMap home">
-          <span class="brand-mark" aria-hidden="true"><span>M</span></span>
+          <span class="brand-mark" aria-hidden="true"><span>↗</span></span>
           <span>
             <strong>MintMap</strong>
             <span class="brand-tagline">Your money. Your direction.</span>
@@ -21,25 +34,35 @@
         </a>
         <nav class="site-nav" aria-label="Primary navigation">
           <a class="nav-link active" href="#summary-heading">Overview</a>
-          <a class="nav-link" href="#transactions-heading">Activity</a>
+          <a class="nav-link" href="#transactions-heading">Transactions</a>
           <a class="nav-link" href="#categories-heading">Categories</a>
         </nav>
-        <div class="privacy-note"><span class="status-dot" aria-hidden="true"></span><span>Private by design</span></div>
+        <div class="header-actions">
+          <label class="header-search">
+            <span class="sr-only">Search transactions</span>
+            <input id="header-search" type="search" placeholder="Search transactions" aria-label="Search transactions">
+          </label>
+          <div class="notification-wrap">
+            <button id="notification-toggle" class="utility-button" type="button" aria-label="Open notifications" aria-expanded="false" aria-controls="notification-panel"><span aria-hidden="true">●</span><span>Notifications</span></button>
+            <div id="notification-panel" class="notification-panel" role="status" hidden>
+              <strong>You're all caught up.</strong>
+              <span>MintMap has no new notifications.</span>
+            </div>
+          </div>
+          <button id="theme-toggle" class="utility-button" type="button" aria-label="Switch to light theme" aria-pressed="false"><span aria-hidden="true">☼</span><span>Light mode</span></button>
+        </div>
       </div>
     </header>
 
     <main id="main-content" class="container page-content">
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">Personal finance, clarified</p>
-        <h1 id="page-title">A clearer direction for your money.</h1>
+        <h1 id="page-title">Your money, at a glance.</h1>
         <p class="intro-copy">
-          Track income and spending in one calm, focused space. Your information stays in this browser.
+          Track your inflows, outflows, and spending in one place.
         </p>
-        <div class="intro-highlights" aria-label="MintMap highlights">
-          <span><i aria-hidden="true"></i> Local-first</span>
-          <span><i aria-hidden="true"></i> ETB ready</span>
-          <span><i aria-hidden="true"></i> Built for clarity</span>
-        </div>
+        <p class="intro-privacy"><span class="status-dot" aria-hidden="true"></span>Your information stays in this browser.</p>
+        <button id="launch-demo" class="button button-secondary intro-demo-button" type="button">Explore fictional demo</button>
         <p id="app-status" class="app-status" role="status" aria-live="polite"></p>
       </section>
 
@@ -161,18 +184,22 @@
           <span class="empty-icon" aria-hidden="true">○</span>
           <h3>Your transaction list is empty</h3>
           <p>Add your first transaction above to start finding your direction.</p>
+          <div class="empty-actions">
+            <button id="empty-explore-demo" class="button button-primary" type="button">Explore the Experience</button>
+            <button id="empty-add-transaction" class="button button-secondary" type="button">Add Your First Transaction</button>
+          </div>
         </div>
         <div id="transaction-list" class="transaction-list" aria-live="polite"></div>
         <p id="transaction-no-results" class="no-results" role="status" hidden>No transactions match the current search and category filter.</p>
       </section>
 
-      <section class="sample-data-banner" aria-labelledby="sample-data-heading">
+      <section id="sample-data-banner" class="sample-data-banner" aria-labelledby="sample-data-heading" hidden>
         <div>
           <p class="eyebrow">Explore the experience</p>
-          <h2 id="sample-data-heading">Want to see MintMap in action?</h2>
-          <p>Load fictional sample transactions to explore the dashboard. They will always be clearly marked as sample data.</p>
+          <h2 id="sample-data-heading">Demo Mode — Fictional Data</h2>
+          <p>Explore a temporary workspace. Your saved transactions will not be changed.</p>
         </div>
-        <button id="load-sample-data" class="button button-secondary" type="button">Load sample data</button>
+        <button id="exit-demo" class="button button-secondary" type="button">Exit Demo</button>
       </section>
 
       <section class="panel category-section" aria-labelledby="categories-heading">
@@ -181,7 +208,13 @@
             <p class="eyebrow">Stay organized</p>
             <h2 id="categories-heading">Categories</h2>
           </div>
-          <button id="add-category" class="button button-secondary" type="button">Add category</button>
+          <div class="category-actions">
+            <span id="category-count" class="category-count"></span>
+            <button id="toggle-categories" class="button button-secondary" type="button" aria-expanded="false" aria-controls="category-list">
+              <span>Show Categories</span><span class="chevron" aria-hidden="true">⌄</span>
+            </button>
+            <button id="add-category" class="button button-secondary" type="button">Add category</button>
+          </div>
         </div>
         <p class="section-description">Create categories that make your spending easier to understand.</p>
         <form id="category-form" class="category-form" hidden>
@@ -202,7 +235,7 @@
             <button id="cancel-category" class="button button-secondary" type="button">Cancel</button>
           </div>
         </form>
-        <div id="category-list" class="category-list"></div>
+        <div id="category-list" class="category-list" hidden></div>
       </section>
     </main>
 
