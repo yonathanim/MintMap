@@ -125,8 +125,8 @@
     if (!isValidDate(transaction.date)) {
       errors.push("Transaction date must be a valid calendar date in YYYY-MM-DD format.");
     }
-    if (typeof transaction.description !== "string" || transaction.description.trim().length === 0) {
-      errors.push("Transaction description is required.");
+    if (transaction.description !== undefined && typeof transaction.description !== "string") {
+      errors.push("Transaction description must be a string when provided.");
     }
     if (typeof transaction.categoryId !== "string" || !categories.some((category) => category.id === transaction.categoryId)) {
       errors.push("Transaction category must reference an existing category.");
@@ -693,6 +693,301 @@
     get("#balance-hint").textContent = state.transactions.length ? "Across all transactions" : "No transactions yet";
     get("#income-hint").textContent = totals.income ? "Across all income" : "No income recorded";
     get("#expense-hint").textContent = totals.expenses ? "Across all expenses" : "No expenses recorded";
+    renderOverviewChart();
+  }
+
+  let activeChartTab = "flow";
+
+  function renderOverviewChart() {
+    const svg = get("#overview-pie-svg");
+    const legend = get("#overview-chart-legend");
+    const centerVal = get("#chart-center-val");
+    const centerTxt = get("#chart-center-txt");
+    const badge = get("#chart-savings-badge");
+    const title = get("#overview-chart-title");
+    const sub = get("#overview-chart-sub");
+    if (!svg || !legend) return;
+
+    svg.replaceChildren();
+    legend.replaceChildren();
+
+    const totals = calculateTotals(state.transactions);
+    const balance = totals.income - totals.expenses;
+    const totalActivity = totals.income + totals.expenses;
+    const expenseGroups = global.MintMapState.aggregateExpensesByCategory(state);
+
+    const radius = 62;
+    const cx = 100;
+    const cy = 100;
+    const circumference = 2 * Math.PI * radius;
+
+    if (activeChartTab === "flow") {
+      if (title) title.textContent = "Cash Flow Ratio";
+      if (sub) sub.textContent = "Balance, Inflows & Outflows";
+
+      if (totalActivity === 0) {
+        if (badge) {
+          badge.textContent = "No Data";
+          badge.style.color = "";
+          badge.style.borderColor = "";
+        }
+        if (centerVal) {
+          centerVal.textContent = "0%";
+          centerVal.style.color = "";
+          centerVal.style.fontSize = "";
+        }
+        if (centerTxt) centerTxt.textContent = "Activity";
+
+        const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        bgCircle.setAttribute("cx", String(cx));
+        bgCircle.setAttribute("cy", String(cy));
+        bgCircle.setAttribute("r", String(radius));
+        bgCircle.setAttribute("fill", "none");
+        bgCircle.setAttribute("stroke", "var(--border)");
+        bgCircle.setAttribute("stroke-width", "20");
+        bgCircle.setAttribute("stroke-dasharray", "4 8");
+        svg.append(bgCircle);
+
+        const emptyNotice = document.createElement("p");
+        emptyNotice.className = "card-hint";
+        emptyNotice.style.margin = "0.5rem 0";
+        emptyNotice.textContent = "Add income and expenses to view your visual cash flow ratio.";
+        legend.append(emptyNotice);
+        return;
+      }
+
+      let segments = [];
+      if (totals.income > 0 && balance >= 0) {
+        const savingsRate = Math.round((balance / totals.income) * 100);
+        const expenseRate = 100 - savingsRate;
+        if (badge) {
+          badge.textContent = `${savingsRate}% Saved`;
+          badge.style.color = "var(--mint)";
+          badge.style.borderColor = "";
+        }
+        if (centerVal) {
+          centerVal.textContent = `${savingsRate}%`;
+          centerVal.style.color = "var(--mint)";
+          centerVal.style.fontSize = "";
+        }
+        if (centerTxt) centerTxt.textContent = "Retained";
+
+        segments = [
+          { label: "Net Balance", amount: balance, pct: savingsRate, color: "var(--mint)" },
+          { label: "Expenses", amount: totals.expenses, pct: expenseRate, color: "var(--danger)" }
+        ];
+      } else if (totals.income > 0 && balance < 0) {
+        const deficit = Math.abs(balance);
+        const deficitRate = Math.round((deficit / totals.expenses) * 100);
+        const coveredRate = 100 - deficitRate;
+        if (badge) {
+          badge.textContent = "Deficit Alert";
+          badge.style.color = "var(--danger)";
+          badge.style.borderColor = "rgba(255, 123, 143, 0.4)";
+        }
+        if (centerVal) {
+          centerVal.textContent = `-${deficitRate}%`;
+          centerVal.style.color = "var(--danger)";
+          centerVal.style.fontSize = "";
+        }
+        if (centerTxt) centerTxt.textContent = "Deficit";
+
+        segments = [
+          { label: "Covered by Income", amount: totals.income, pct: coveredRate, color: "var(--mint)" },
+          { label: "Net Deficit", amount: deficit, pct: deficitRate, color: "var(--danger)" }
+        ];
+      } else {
+        if (badge) {
+          badge.textContent = "100% Outflow";
+          badge.style.color = "var(--danger)";
+          badge.style.borderColor = "rgba(255, 123, 143, 0.4)";
+        }
+        if (centerVal) {
+          centerVal.textContent = "100%";
+          centerVal.style.color = "var(--danger)";
+          centerVal.style.fontSize = "";
+        }
+        if (centerTxt) centerTxt.textContent = "Expenses";
+
+        segments = [
+          { label: "Expenses", amount: totals.expenses, pct: 100, color: "var(--danger)" }
+        ];
+      }
+
+      const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      bgCircle.setAttribute("cx", String(cx));
+      bgCircle.setAttribute("cy", String(cy));
+      bgCircle.setAttribute("r", String(radius));
+      bgCircle.setAttribute("fill", "none");
+      bgCircle.setAttribute("stroke", "var(--surface-raised)");
+      bgCircle.setAttribute("stroke-width", "20");
+      svg.append(bgCircle);
+
+      let currentOffset = 0;
+      segments.forEach((seg) => {
+        if (seg.pct <= 0) return;
+        const strokeLength = (seg.pct / 100) * circumference;
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", String(cx));
+        circle.setAttribute("cy", String(cy));
+        circle.setAttribute("r", String(radius));
+        circle.setAttribute("fill", "none");
+        circle.setAttribute("stroke", seg.color);
+        circle.setAttribute("stroke-width", "20");
+        circle.setAttribute("stroke-dasharray", `${strokeLength} ${circumference - strokeLength}`);
+        circle.setAttribute("stroke-dashoffset", String(-currentOffset));
+        circle.setAttribute("class", "donut-slice");
+        circle.setAttribute("aria-label", `${seg.label}: ${seg.pct}%`);
+
+        circle.addEventListener("mouseenter", () => {
+          if (centerVal) {
+            centerVal.textContent = formatCurrency(seg.amount);
+            centerVal.style.fontSize = "0.95rem";
+          }
+          if (centerTxt) centerTxt.textContent = seg.label;
+        });
+        circle.addEventListener("mouseleave", () => {
+          if (centerVal) centerVal.style.fontSize = "";
+          renderOverviewChart();
+        });
+
+        svg.append(circle);
+        currentOffset += strokeLength;
+      });
+
+      const legendData = [
+        { label: "Total Balance", amount: balance, color: "var(--mint)", pct: totals.income > 0 ? `${Math.round((balance / totals.income) * 100)}%` : "" },
+        { label: "Total Income", amount: totals.income, color: "#18a66a", pct: "Inflows" },
+        { label: "Total Expenses", amount: totals.expenses, color: "var(--danger)", pct: totals.income > 0 ? `${Math.round((totals.expenses / totals.income) * 100)}%` : "Outflows" }
+      ];
+
+      legendData.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "legend-item";
+        row.innerHTML = `
+          <div class="legend-item-left">
+            <span class="legend-dot" style="background:${item.color};"></span>
+            <span class="legend-label">${item.label}</span>
+          </div>
+          <div class="legend-item-right">
+            <span class="legend-val">${formatCurrency(item.amount)}</span>
+            ${item.pct ? `<span class="legend-pct">${item.pct}</span>` : ""}
+          </div>
+        `;
+        legend.append(row);
+      });
+
+    } else {
+      if (title) title.textContent = "Expenses by Category";
+      if (sub) sub.textContent = "Distribution of spending";
+
+      if (expenseGroups.length === 0) {
+        if (badge) {
+          badge.textContent = "0 Expenses";
+          badge.style.color = "";
+          badge.style.borderColor = "";
+        }
+        if (centerVal) {
+          centerVal.textContent = "0";
+          centerVal.style.color = "";
+          centerVal.style.fontSize = "";
+        }
+        if (centerTxt) centerTxt.textContent = "Expenses";
+
+        const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        bgCircle.setAttribute("cx", String(cx));
+        bgCircle.setAttribute("cy", String(cy));
+        bgCircle.setAttribute("r", String(radius));
+        bgCircle.setAttribute("fill", "none");
+        bgCircle.setAttribute("stroke", "var(--border)");
+        bgCircle.setAttribute("stroke-width", "20");
+        bgCircle.setAttribute("stroke-dasharray", "4 8");
+        svg.append(bgCircle);
+
+        const emptyNotice = document.createElement("p");
+        emptyNotice.className = "card-hint";
+        emptyNotice.style.margin = "0.5rem 0";
+        emptyNotice.textContent = "No expenses recorded yet.";
+        legend.append(emptyNotice);
+        return;
+      }
+
+      if (badge) {
+        badge.textContent = `${expenseGroups.length} Categories`;
+        badge.style.color = "var(--mint)";
+        badge.style.borderColor = "";
+      }
+      const top = expenseGroups[0];
+      const topPct = totals.expenses > 0 ? Math.round((top.amount / totals.expenses) * 100) : 0;
+      if (centerVal) {
+        centerVal.textContent = `${topPct}%`;
+        centerVal.style.color = "var(--mint)";
+        centerVal.style.fontSize = "";
+      }
+      if (centerTxt) centerTxt.textContent = top.categoryName;
+
+      const categoryPalette = ["#4dd9a0", "#78b4f5", "#ffb26b", "#e07af7", "#ff7b8f", "#e6ea82", "#63e6be", "#b197fc"];
+
+      const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      bgCircle.setAttribute("cx", String(cx));
+      bgCircle.setAttribute("cy", String(cy));
+      bgCircle.setAttribute("r", String(radius));
+      bgCircle.setAttribute("fill", "none");
+      bgCircle.setAttribute("stroke", "var(--surface-raised)");
+      bgCircle.setAttribute("stroke-width", "20");
+      svg.append(bgCircle);
+
+      let currentOffset = 0;
+      expenseGroups.forEach((group, index) => {
+        const pct = totals.expenses > 0 ? group.amount / totals.expenses : 0;
+        const strokeLength = pct * circumference;
+        const color = categoryPalette[index % categoryPalette.length];
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", String(cx));
+        circle.setAttribute("cy", String(cy));
+        circle.setAttribute("r", String(radius));
+        circle.setAttribute("fill", "none");
+        circle.setAttribute("stroke", color);
+        circle.setAttribute("stroke-width", "20");
+        circle.setAttribute("stroke-dasharray", `${strokeLength} ${circumference - strokeLength}`);
+        circle.setAttribute("stroke-dashoffset", String(-currentOffset));
+        circle.setAttribute("class", "donut-slice");
+        circle.setAttribute("aria-label", `${group.categoryName}: ${formatCurrency(group.amount)}`);
+
+        circle.addEventListener("mouseenter", () => {
+          if (centerVal) {
+            centerVal.textContent = formatCurrency(group.amount);
+            centerVal.style.fontSize = "0.95rem";
+          }
+          if (centerTxt) centerTxt.textContent = group.categoryName;
+        });
+        circle.addEventListener("mouseleave", () => {
+          if (centerVal) {
+            centerVal.style.fontSize = "";
+            centerVal.textContent = `${topPct}%`;
+          }
+          if (centerTxt) centerTxt.textContent = top.categoryName;
+        });
+
+        svg.append(circle);
+        currentOffset += strokeLength;
+
+        const row = document.createElement("div");
+        row.className = "legend-item";
+        row.innerHTML = `
+          <div class="legend-item-left">
+            <span class="legend-dot" style="background:${color};"></span>
+            <span class="legend-label">${group.categoryName}</span>
+          </div>
+          <div class="legend-item-right">
+            <span class="legend-val">${formatCurrency(group.amount)}</span>
+            <span class="legend-pct">${Math.round(pct * 100)}%</span>
+          </div>
+        `;
+        legend.append(row);
+      });
+    }
   }
 
   function renderVisualization() {
@@ -764,6 +1059,7 @@
     visibleTransactions.forEach((transaction) => {
       const item = document.createElement("article");
       item.className = "transaction-item";
+      item.id = `tx-${transaction.id}`;
 
       const details = document.createElement("div");
       details.className = "transaction-details";
@@ -877,23 +1173,319 @@
     });
   }
 
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]);
+  }
+
+  function highlightMatch(text, query) {
+    if (!query || !text) return escapeHtml(text || "");
+    const escapedText = escapeHtml(text);
+    const escapedQuery = escapeHtml(query);
+    const regex = new RegExp(`(${escapedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return escapedText.replace(regex, "<mark>$1</mark>");
+  }
+
+  function jumpToTransaction(txId) {
+    const headerDropdown = get("#header-search-dropdown");
+    const mobileDropdown = get("#mobile-search-dropdown");
+    const mobilePanel = get("#mobile-search-panel");
+    if (headerDropdown) headerDropdown.hidden = true;
+    if (mobileDropdown) mobileDropdown.hidden = true;
+    if (mobilePanel) mobilePanel.hidden = true;
+
+    const targetEl = document.getElementById(`tx-${txId}`);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetEl.classList.remove("transaction-highlight");
+      void targetEl.offsetWidth;
+      targetEl.classList.add("transaction-highlight");
+      setTimeout(() => {
+        targetEl.classList.remove("transaction-highlight");
+      }, 2500);
+    } else {
+      searchQuery = "";
+      categoryFilter = "";
+      get("#transaction-search").value = "";
+      get("#filter-category").value = "";
+      get("#header-search").value = "";
+      renderTransactions();
+      const retryEl = document.getElementById(`tx-${txId}`);
+      if (retryEl) {
+        retryEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        retryEl.classList.add("transaction-highlight");
+        setTimeout(() => retryEl.classList.remove("transaction-highlight"), 2500);
+      }
+    }
+  }
+
+  function renderLiveSearch(query) {
+    const headerDropdown = get("#header-search-dropdown");
+    const headerResults = get("#header-search-results");
+    const headerCount = get("#search-live-count");
+
+    const mobileDropdown = get("#mobile-search-dropdown");
+    const mobileResults = get("#mobile-search-live-results");
+    const mobileCount = get("#mobile-search-live-count");
+
+    const trimmed = (query || "").trim();
+    if (!trimmed || !state) {
+      if (headerDropdown) headerDropdown.hidden = true;
+      if (mobileDropdown) mobileDropdown.hidden = true;
+      return;
+    }
+
+    const norm = trimmed.toLocaleLowerCase();
+    const matches = state.transactions.filter((tx) => {
+      const cName = categoryName(tx.categoryId).toLocaleLowerCase();
+      const desc = (tx.description || "").toLocaleLowerCase();
+      const notes = (tx.notes || "").toLocaleLowerCase();
+      const date = tx.date || "";
+      const amt = String(tx.amount);
+      return desc.includes(norm) || cName.includes(norm) || notes.includes(norm) || date.includes(norm) || amt.includes(norm);
+    });
+
+    const countText = `${matches.length} match${matches.length === 1 ? "" : "es"}`;
+    if (headerCount) headerCount.textContent = countText;
+    if (mobileCount) mobileCount.textContent = countText;
+
+    function populateContainer(container) {
+      if (!container) return;
+      container.replaceChildren();
+
+      if (matches.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "search-result-empty";
+        empty.innerHTML = `No transactions match "<strong>${escapeHtml(trimmed)}</strong>"<br><small style="color:var(--muted);margin-top:0.3rem;display:block;">Try searching by category, amount, or date</small>`;
+        container.append(empty);
+        return;
+      }
+
+      const previewMatches = matches.slice(0, 8);
+      previewMatches.forEach((tx) => {
+        const item = document.createElement("div");
+        item.className = "search-result-item";
+        item.setAttribute("role", "button");
+        item.setAttribute("tabindex", "0");
+        item.innerHTML = `
+          <div class="search-result-left">
+            <span class="search-result-icon ${tx.type}" aria-hidden="true">${tx.type === "income" ? "↑" : "↓"}</span>
+            <div class="search-result-info">
+              <span class="search-result-title">${highlightMatch(tx.description, trimmed)}</span>
+              <span class="search-result-meta">${tx.date} · ${categoryName(tx.categoryId)}</span>
+            </div>
+          </div>
+          <div class="search-result-right">
+            <span class="search-result-amount ${tx.type}">${tx.type === "income" ? "+" : "-"}${formatCurrency(tx.amount)}</span>
+            <button type="button" class="search-result-action" title="Edit this transaction" aria-label="Edit ${escapeHtml(tx.description)}">✎</button>
+          </div>
+        `;
+
+        item.addEventListener("click", (e) => {
+          if (e.target.closest(".search-result-action")) return;
+          jumpToTransaction(tx.id);
+        });
+
+        item.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") jumpToTransaction(tx.id);
+        });
+
+        const editBtn = item.querySelector(".search-result-action");
+        if (editBtn) {
+          editBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (headerDropdown) headerDropdown.hidden = true;
+            if (mobileDropdown) mobileDropdown.hidden = true;
+            beginEdit(tx.id);
+            get("#transaction-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+        }
+
+        container.append(item);
+      });
+
+      if (matches.length > 8) {
+        const moreNotice = document.createElement("div");
+        moreNotice.className = "search-live-head";
+        moreNotice.style.justifyContent = "center";
+        moreNotice.innerHTML = `<span>+ ${matches.length - 8} more in list below</span>`;
+        container.append(moreNotice);
+      }
+    }
+
+    populateContainer(headerResults);
+    populateContainer(mobileResults);
+
+    if (headerDropdown) headerDropdown.hidden = false;
+    if (mobileDropdown) mobileDropdown.hidden = false;
+  }
+
+  function generateInsights(state) {
+    const list = [];
+    if (!state || !Array.isArray(state.transactions)) return list;
+
+    const totals = calculateTotals(state.transactions);
+    const balance = totals.income - totals.expenses;
+    const count = state.transactions.length;
+
+    if (count === 0) {
+      list.push({
+        type: "info",
+        icon: "✨",
+        title: "Welcome to MintMap",
+        message: "Add your first transaction or launch the demo to activate live spending analysis and financial insights."
+      });
+      return list;
+    }
+
+    if (balance < 0) {
+      list.push({
+        type: "warning",
+        icon: "⚠️",
+        title: "Cash Flow Deficit",
+        message: `Total expenses exceed income by ${formatCurrency(Math.abs(balance))}. Outflows are currently outpacing your inflows.`
+      });
+    } else if (totals.income > 0) {
+      const savingsRate = Math.round((balance / totals.income) * 100);
+      list.push({
+        type: "positive",
+        icon: "📈",
+        title: `${savingsRate}% Savings Retained`,
+        message: `You have retained ${savingsRate}% of all recorded income. Net balance stands at ${formatCurrency(balance)}.`
+      });
+    }
+
+    const expenseGroups = global.MintMapState.aggregateExpensesByCategory(state);
+    if (expenseGroups.length > 0 && totals.expenses > 0) {
+      const top = expenseGroups[0];
+      const topPct = Math.round((top.amount / totals.expenses) * 100);
+      list.push({
+        type: "info",
+        icon: "🛍️",
+        title: `Top Outflow: ${top.categoryName}`,
+        message: `${top.categoryName} represents ${topPct}% of your total spending (${formatCurrency(top.amount)}).`,
+        actionLabel: `Filter by ${top.categoryName}`,
+        actionCategoryId: top.categoryId
+      });
+    }
+
+    const expenses = state.transactions.filter((t) => t.type === "expense");
+    if (expenses.length > 0) {
+      const largest = expenses.reduce((max, t) => (t.amount > max.amount ? t : max), expenses[0]);
+      list.push({
+        type: "neutral",
+        icon: "💳",
+        title: "Largest Single Expense",
+        message: `"${largest.description}" for ${formatCurrency(largest.amount)} on ${largest.date}.`,
+        actionLabel: "View in list",
+        actionTxId: largest.id
+      });
+    }
+
+    if (count >= 5) {
+      list.push({
+        type: "positive",
+        icon: "🎯",
+        title: `${count} Transactions Tracked`,
+        message: "Your financial history provides strong spending accuracy. Keep logging to stay on course."
+      });
+    }
+
+    list.push({
+      type: "neutral",
+      icon: "🔒",
+      title: "Private by Design",
+      message: "MintMap stores 100% of your financial data directly in this browser with zero external tracking."
+    });
+
+    return list;
+  }
+
+  function renderInsights() {
+    const listEl = get("#notification-list");
+    const badgeEl = get("#notification-badge");
+    const countEl = get("#notification-active-count");
+    if (!listEl) return;
+
+    listEl.replaceChildren();
+    const insights = generateInsights(state);
+
+    if (badgeEl) {
+      badgeEl.textContent = String(insights.length);
+      badgeEl.hidden = insights.length === 0;
+    }
+    if (countEl) {
+      countEl.textContent = `${insights.length} active`;
+    }
+
+    if (insights.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "notification-empty";
+      empty.innerHTML = `<strong>You're all caught up.</strong><p>MintMap has no active alerts.</p>`;
+      listEl.append(empty);
+      return;
+    }
+
+    insights.forEach((insight) => {
+      const item = document.createElement("div");
+      item.className = `notification-item notification-item--${insight.type}`;
+      item.innerHTML = `
+        <span class="notification-item-icon" aria-hidden="true">${insight.icon}</span>
+        <div class="notification-item-text">
+          <strong>${insight.title}</strong>
+          <p>${insight.message}</p>
+          ${insight.actionLabel ? `<button type="button" class="notification-item-action">${insight.actionLabel} →</button>` : ""}
+        </div>
+      `;
+
+      if (insight.actionCategoryId) {
+        const btn = item.querySelector(".notification-item-action");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            get("#notification-panel").hidden = true;
+            get("#notification-toggle").setAttribute("aria-expanded", "false");
+            categoryFilter = insight.actionCategoryId;
+            get("#filter-category").value = insight.actionCategoryId;
+            renderTransactions();
+            get("#transactions-heading")?.scrollIntoView({ behavior: "smooth" });
+          });
+        }
+      } else if (insight.actionTxId) {
+        const btn = item.querySelector(".notification-item-action");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            get("#notification-panel").hidden = true;
+            get("#notification-toggle").setAttribute("aria-expanded", "false");
+            jumpToTransaction(insight.actionTxId);
+          });
+        }
+      }
+
+      listEl.append(item);
+    });
+  }
+
   function render() {
     renderSummary();
     renderTransactions();
     renderCategories();
     renderVisualization();
+    renderInsights();
     get("#sample-data-banner").hidden = !demoMode;
     get("#launch-demo").hidden = demoMode;
     get("#transaction-form-heading").textContent = demoMode ? "Try a transaction" : (editingTransactionId ? "Edit transaction" : "Add a transaction");
   }
 
   function readForm() {
+    const rawDescription = get("#transaction-description").value.trim();
+    const catId = get("#transaction-category").value;
+    const categoryObj = state && Array.isArray(state.categories) ? state.categories.find((c) => c.id === catId) : null;
+    const fallbackDesc = categoryObj ? categoryObj.name : (get("#transaction-type").value === "income" ? "Income" : "Expense");
     return {
       type: get("#transaction-type").value,
       amount: Number(get("#transaction-amount").value),
-      categoryId: get("#transaction-category").value,
+      categoryId: catId,
       date: get("#transaction-date").value,
-      description: get("#transaction-description").value.trim(),
+      description: rawDescription || fallbackDesc,
       notes: get("#transaction-notes").value.trim()
     };
   }
@@ -1124,26 +1716,97 @@
     populateCategorySelect(get("#filter-category"), state.categories, false);
     get("#transaction-form").addEventListener("submit", handleSubmit);
     get("#transaction-cancel").addEventListener("click", resetForm);
-    get("#transaction-search").addEventListener("input", (event) => {
-      searchQuery = event.target.value;
-      get("#header-search").value = searchQuery;
+    // Chart Tab toggles
+    const tabFlow = get("#chart-tab-flow");
+    const tabCategories = get("#chart-tab-categories");
+    if (tabFlow && tabCategories) {
+      tabFlow.addEventListener("click", () => {
+        activeChartTab = "flow";
+        tabFlow.classList.add("active");
+        tabFlow.setAttribute("aria-selected", "true");
+        tabCategories.classList.remove("active");
+        tabCategories.setAttribute("aria-selected", "false");
+        renderOverviewChart();
+      });
+      tabCategories.addEventListener("click", () => {
+        activeChartTab = "categories";
+        tabCategories.classList.add("active");
+        tabCategories.setAttribute("aria-selected", "true");
+        tabFlow.classList.remove("active");
+        tabFlow.setAttribute("aria-selected", "false");
+        renderOverviewChart();
+      });
+    }
+
+    // Live Search bindings
+    function syncAndSearch(val) {
+      searchQuery = val;
+      const hInput = get("#header-search");
+      const mInput = get("#mobile-search-input");
+      const tInput = get("#transaction-search");
+      if (hInput && hInput.value !== val) hInput.value = val;
+      if (mInput && mInput.value !== val) mInput.value = val;
+      if (tInput && tInput.value !== val) tInput.value = val;
       renderTransactions();
+      renderLiveSearch(val);
+    }
+
+    get("#transaction-search").addEventListener("input", (event) => {
+      syncAndSearch(event.target.value);
     });
     get("#header-search").addEventListener("input", (event) => {
-      searchQuery = event.target.value;
-      get("#transaction-search").value = searchQuery;
-      renderTransactions();
+      syncAndSearch(event.target.value);
     });
+
+    const mobileInput = get("#mobile-search-input");
+    if (mobileInput) {
+      mobileInput.addEventListener("input", (event) => {
+        syncAndSearch(event.target.value);
+      });
+    }
+
+    const mobileToggle = get("#mobile-search-toggle");
+    const mobilePanel = get("#mobile-search-panel");
+    const mobileClose = get("#mobile-search-close");
+    if (mobileToggle && mobilePanel) {
+      mobileToggle.addEventListener("click", () => {
+        const isHidden = mobilePanel.hidden;
+        mobilePanel.hidden = !isHidden;
+        mobileToggle.setAttribute("aria-expanded", String(isHidden));
+        if (isHidden && mobileInput) {
+          mobileInput.focus();
+          if (searchQuery) renderLiveSearch(searchQuery);
+        }
+      });
+    }
+    if (mobileClose && mobilePanel) {
+      mobileClose.addEventListener("click", () => {
+        mobilePanel.hidden = true;
+        if (mobileToggle) mobileToggle.setAttribute("aria-expanded", "false");
+      });
+    }
+
+    function clearAllSearch() {
+      syncAndSearch("");
+      const hDrop = get("#header-search-dropdown");
+      const mDrop = get("#mobile-search-dropdown");
+      if (hDrop) hDrop.hidden = true;
+      if (mDrop) mDrop.hidden = true;
+    }
+
+    const clearBtn1 = get("#search-live-clear");
+    const clearBtn2 = get("#mobile-search-live-clear");
+    if (clearBtn1) clearBtn1.addEventListener("click", clearAllSearch);
+    if (clearBtn2) clearBtn2.addEventListener("click", clearAllSearch);
+
     get("#filter-category").addEventListener("change", (event) => {
       categoryFilter = event.target.value;
       renderTransactions();
     });
     get("#clear-filters").addEventListener("click", () => {
-      searchQuery = "";
       categoryFilter = "";
-      get("#transaction-search").value = "";
       get("#filter-category").value = "";
-      renderTransactions();
+      clearAllSearch();
     });
     get("#empty-explore-demo").addEventListener("click", enterDemoMode);
     get("#launch-demo").addEventListener("click", enterDemoMode);
@@ -1166,15 +1829,67 @@
       button.setAttribute("aria-expanded", String(!expanded));
       panel.hidden = expanded;
     });
+
+    const notifClose = get("#notification-close");
+    if (notifClose) {
+      notifClose.addEventListener("click", () => {
+        get("#notification-toggle").setAttribute("aria-expanded", "false");
+        get("#notification-panel").hidden = true;
+      });
+    }
+
     get("#theme-toggle").addEventListener("click", () => {
       const current = document.documentElement.dataset.theme;
       const systemLight = global.matchMedia("(prefers-color-scheme: light)").matches;
       applyTheme(current === "light" || (!current && systemLight) ? "dark" : "light");
     });
+
+    // Click outside handler for Popups & Dropdowns
     document.addEventListener("click", (event) => {
       if (!event.target.closest(".notification-wrap")) {
         get("#notification-toggle").setAttribute("aria-expanded", "false");
         get("#notification-panel").hidden = true;
+      }
+      if (!event.target.closest(".header-search-wrap")) {
+        const hDrop = get("#header-search-dropdown");
+        if (hDrop) hDrop.hidden = true;
+      }
+    });
+
+    // Keyboard Shortcuts (Escape to close, / or Ctrl+K to search)
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        const hDrop = get("#header-search-dropdown");
+        const mDrop = get("#mobile-search-dropdown");
+        const mPanel = get("#mobile-search-panel");
+        const nPanel = get("#notification-panel");
+        if (hDrop) hDrop.hidden = true;
+        if (mDrop) mDrop.hidden = true;
+        if (mPanel) {
+          mPanel.hidden = true;
+          if (mobileToggle) mobileToggle.setAttribute("aria-expanded", "false");
+        }
+        if (nPanel) {
+          nPanel.hidden = true;
+          get("#notification-toggle").setAttribute("aria-expanded", "false");
+        }
+      } else if (
+        (event.key === "/" || (event.ctrlKey && event.key.toLowerCase() === "k") || (event.metaKey && event.key.toLowerCase() === "k"))
+        && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)
+      ) {
+        event.preventDefault();
+        const searchInput = get("#header-search");
+        if (searchInput && window.innerWidth > 560) {
+          searchInput.focus();
+          searchInput.select();
+        } else if (mobileToggle && mobilePanel) {
+          mobilePanel.hidden = false;
+          mobileToggle.setAttribute("aria-expanded", "true");
+          if (mobileInput) {
+            mobileInput.focus();
+            mobileInput.select();
+          }
+        }
       }
     });
     get("#add-category").addEventListener("click", () => {
