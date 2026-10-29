@@ -539,14 +539,35 @@
     }
   }
 
-  function setStatus(message, type = "info") {
-    const status = get("#app-status");
+  let statusClearTimer = null;
+
+  // Form-scoped messages (save, update, validation errors) go near the form.
+  // Global messages (storage errors, demo mode, load status) go in the intro.
+  function setStatus(message, type = "info", scope = "global") {
+    const elementId = scope === "form" ? "#form-status" : "#app-status";
+    const status = get(elementId);
     if (!status) {
       return;
     }
 
+    if (statusClearTimer !== null) {
+      clearTimeout(statusClearTimer);
+      statusClearTimer = null;
+    }
+
     status.textContent = message;
     status.dataset.status = type;
+
+    // Auto-clear non-error messages after 5 seconds.
+    if (type !== "error") {
+      statusClearTimer = setTimeout(() => {
+        if (status.dataset.status !== "error") {
+          status.textContent = "";
+          delete status.dataset.status;
+        }
+        statusClearTimer = null;
+      }, 5000);
+    }
   }
 
   function formatCurrency(amount) {
@@ -692,7 +713,8 @@
     }
 
     const summaryHeading = document.createElement("h3");
-    summaryHeading.textContent = "Accessible spending summary";
+    summaryHeading.className = "sr-only";
+    summaryHeading.textContent = "Spending breakdown";
     textSummary.append(summaryHeading);
     const summaryList = document.createElement("ul");
     summaryList.className = "spending-summary-list";
@@ -893,8 +915,13 @@
     return true;
   }
 
+  function todayDate() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
   function resetForm() {
     get("#transaction-form").reset();
+    get("#transaction-date").value = todayDate();
     editingTransactionId = null;
     get("#transaction-form-heading").textContent = "Add a transaction";
     get("#transaction-submit").textContent = "Save transaction";
@@ -916,7 +943,7 @@
 
     if (!operation.ok) {
       const unmatched = errorsForFields(operation.errors);
-      setStatus(unmatched.join(" ") || "Please correct the highlighted fields.", "error");
+      setStatus(unmatched.join(" ") || "Please correct the highlighted fields.", "error", "form");
       return;
     }
     if (!persist(operation.state)) {
@@ -925,7 +952,7 @@
 
     render();
     resetForm();
-    setStatus(isEditing ? "Transaction updated." : "Transaction saved.");
+    setStatus(isEditing ? "Transaction updated." : "Transaction saved.", "info", "form");
   }
 
   function beginEdit(transactionId) {
@@ -1092,6 +1119,7 @@
     state = loadResult.state;
     realState = state;
     applyTheme(document.documentElement.dataset.theme || null, false);
+    get("#transaction-date").value = todayDate();
     populateCategorySelect(get("#transaction-category"), state.categories, true);
     populateCategorySelect(get("#filter-category"), state.categories, false);
     get("#transaction-form").addEventListener("submit", handleSubmit);
