@@ -616,10 +616,10 @@
         ? categoryTypes(category).includes(transactionType)
         : true)
       .forEach((category) => {
-      const option = document.createElement("option");
-      option.value = category.id;
-      option.textContent = category.name;
-      select.append(option);
+        const option = document.createElement("option");
+        option.value = category.id;
+        option.textContent = category.name;
+        select.append(option);
       });
 
     if (categories
@@ -696,8 +696,6 @@
     renderOverviewChart();
   }
 
-  let activeChartTab = "flow";
-
   function renderOverviewChart() {
     const svg = get("#overview-pie-svg");
     const legend = get("#overview-chart-legend");
@@ -711,283 +709,181 @@
     svg.replaceChildren();
     legend.replaceChildren();
 
+    if (title) title.textContent = "Financial Breakdown";
+    if (sub) sub.textContent = "Total Balance, Income & Expenses";
+
     const totals = calculateTotals(state.transactions);
     const balance = totals.income - totals.expenses;
     const totalActivity = totals.income + totals.expenses;
-    const expenseGroups = global.MintMapState.aggregateExpensesByCategory(state);
 
     const radius = 62;
     const cx = 100;
     const cy = 100;
-    const circumference = 2 * Math.PI * radius;
+    const circumference = 2 * Math.PI * radius; // ~389.56
 
-    if (activeChartTab === "flow") {
-      if (title) title.textContent = "Cash Flow Ratio";
-      if (sub) sub.textContent = "Balance, Inflows & Outflows";
-
-      if (totalActivity === 0) {
-        if (badge) {
-          badge.textContent = "No Data";
-          badge.style.color = "";
-          badge.style.borderColor = "";
-        }
-        if (centerVal) {
-          centerVal.textContent = "0%";
-          centerVal.style.color = "";
-          centerVal.style.fontSize = "";
-        }
-        if (centerTxt) centerTxt.textContent = "Activity";
-
-        const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        bgCircle.setAttribute("cx", String(cx));
-        bgCircle.setAttribute("cy", String(cy));
-        bgCircle.setAttribute("r", String(radius));
-        bgCircle.setAttribute("fill", "none");
-        bgCircle.setAttribute("stroke", "var(--border)");
-        bgCircle.setAttribute("stroke-width", "20");
-        bgCircle.setAttribute("stroke-dasharray", "4 8");
-        svg.append(bgCircle);
-
-        const emptyNotice = document.createElement("p");
-        emptyNotice.className = "card-hint";
-        emptyNotice.style.margin = "0.5rem 0";
-        emptyNotice.textContent = "Add income and expenses to view your visual cash flow ratio.";
-        legend.append(emptyNotice);
-        return;
+    if (totalActivity === 0) {
+      if (badge) {
+        badge.textContent = "0% Retained";
+        badge.style.color = "";
+        badge.style.borderColor = "";
       }
-
-      let segments = [];
-      if (totals.income > 0 && balance >= 0) {
-        const savingsRate = Math.round((balance / totals.income) * 100);
-        const expenseRate = 100 - savingsRate;
-        if (badge) {
-          badge.textContent = `${savingsRate}% Saved`;
-          badge.style.color = "var(--mint)";
-          badge.style.borderColor = "";
-        }
-        if (centerVal) {
-          centerVal.textContent = `${savingsRate}%`;
-          centerVal.style.color = "var(--mint)";
-          centerVal.style.fontSize = "";
-        }
-        if (centerTxt) centerTxt.textContent = "Retained";
-
-        segments = [
-          { label: "Net Balance", amount: balance, pct: savingsRate, color: "var(--mint)" },
-          { label: "Expenses", amount: totals.expenses, pct: expenseRate, color: "var(--danger)" }
-        ];
-      } else if (totals.income > 0 && balance < 0) {
-        const deficit = Math.abs(balance);
-        const deficitRate = Math.round((deficit / totals.expenses) * 100);
-        const coveredRate = 100 - deficitRate;
-        if (badge) {
-          badge.textContent = "Deficit Alert";
-          badge.style.color = "var(--danger)";
-          badge.style.borderColor = "rgba(255, 123, 143, 0.4)";
-        }
-        if (centerVal) {
-          centerVal.textContent = `-${deficitRate}%`;
-          centerVal.style.color = "var(--danger)";
-          centerVal.style.fontSize = "";
-        }
-        if (centerTxt) centerTxt.textContent = "Deficit";
-
-        segments = [
-          { label: "Covered by Income", amount: totals.income, pct: coveredRate, color: "var(--mint)" },
-          { label: "Net Deficit", amount: deficit, pct: deficitRate, color: "var(--danger)" }
-        ];
-      } else {
-        if (badge) {
-          badge.textContent = "100% Outflow";
-          badge.style.color = "var(--danger)";
-          badge.style.borderColor = "rgba(255, 123, 143, 0.4)";
-        }
-        if (centerVal) {
-          centerVal.textContent = "100%";
-          centerVal.style.color = "var(--danger)";
-          centerVal.style.fontSize = "";
-        }
-        if (centerTxt) centerTxt.textContent = "Expenses";
-
-        segments = [
-          { label: "Expenses", amount: totals.expenses, pct: 100, color: "var(--danger)" }
-        ];
+      if (centerVal) {
+        centerVal.textContent = "0%";
+        centerVal.style.color = "";
+        centerVal.style.fontSize = "";
       }
+      if (centerTxt) centerTxt.textContent = "Balance";
 
       const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       bgCircle.setAttribute("cx", String(cx));
       bgCircle.setAttribute("cy", String(cy));
       bgCircle.setAttribute("r", String(radius));
       bgCircle.setAttribute("fill", "none");
-      bgCircle.setAttribute("stroke", "var(--surface-raised)");
+      bgCircle.setAttribute("stroke", "var(--border)");
       bgCircle.setAttribute("stroke-width", "20");
+      bgCircle.setAttribute("stroke-dasharray", "4 8");
       svg.append(bgCircle);
 
-      let currentOffset = 0;
-      segments.forEach((seg) => {
-        if (seg.pct <= 0) return;
-        const strokeLength = (seg.pct / 100) * circumference;
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", String(cx));
-        circle.setAttribute("cy", String(cy));
-        circle.setAttribute("r", String(radius));
-        circle.setAttribute("fill", "none");
-        circle.setAttribute("stroke", seg.color);
-        circle.setAttribute("stroke-width", "20");
-        circle.setAttribute("stroke-dasharray", `${strokeLength} ${circumference - strokeLength}`);
-        circle.setAttribute("stroke-dashoffset", String(-currentOffset));
-        circle.setAttribute("class", "donut-slice");
-        circle.setAttribute("aria-label", `${seg.label}: ${seg.pct}%`);
+      const emptyNotice = document.createElement("p");
+      emptyNotice.className = "card-hint";
+      emptyNotice.style.margin = "0.5rem 0";
+      emptyNotice.textContent = "Record income and expenses to view your financial distribution.";
+      legend.append(emptyNotice);
+      return;
+    }
 
-        circle.addEventListener("mouseenter", () => {
-          if (centerVal) {
-            centerVal.textContent = formatCurrency(seg.amount);
-            centerVal.style.fontSize = "0.95rem";
-          }
-          if (centerTxt) centerTxt.textContent = seg.label;
-        });
-        circle.addEventListener("mouseleave", () => {
-          if (centerVal) centerVal.style.fontSize = "";
-          renderOverviewChart();
-        });
-
-        svg.append(circle);
-        currentOffset += strokeLength;
-      });
-
-      const legendData = [
-        { label: "Total Balance", amount: balance, color: "var(--mint)", pct: totals.income > 0 ? `${Math.round((balance / totals.income) * 100)}%` : "" },
-        { label: "Total Income", amount: totals.income, color: "#18a66a", pct: "Inflows" },
-        { label: "Total Expenses", amount: totals.expenses, color: "var(--danger)", pct: totals.income > 0 ? `${Math.round((totals.expenses / totals.income) * 100)}%` : "Outflows" }
-      ];
-
-      legendData.forEach((item) => {
-        const row = document.createElement("div");
-        row.className = "legend-item";
-        row.innerHTML = `
-          <div class="legend-item-left">
-            <span class="legend-dot" style="background:${item.color};"></span>
-            <span class="legend-label">${item.label}</span>
-          </div>
-          <div class="legend-item-right">
-            <span class="legend-val">${formatCurrency(item.amount)}</span>
-            ${item.pct ? `<span class="legend-pct">${item.pct}</span>` : ""}
-          </div>
-        `;
-        legend.append(row);
-      });
-
-    } else {
-      if (title) title.textContent = "Expenses by Category";
-      if (sub) sub.textContent = "Distribution of spending";
-
-      if (expenseGroups.length === 0) {
-        if (badge) {
-          badge.textContent = "0 Expenses";
-          badge.style.color = "";
-          badge.style.borderColor = "";
-        }
-        if (centerVal) {
-          centerVal.textContent = "0";
-          centerVal.style.color = "";
-          centerVal.style.fontSize = "";
-        }
-        if (centerTxt) centerTxt.textContent = "Expenses";
-
-        const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        bgCircle.setAttribute("cx", String(cx));
-        bgCircle.setAttribute("cy", String(cy));
-        bgCircle.setAttribute("r", String(radius));
-        bgCircle.setAttribute("fill", "none");
-        bgCircle.setAttribute("stroke", "var(--border)");
-        bgCircle.setAttribute("stroke-width", "20");
-        bgCircle.setAttribute("stroke-dasharray", "4 8");
-        svg.append(bgCircle);
-
-        const emptyNotice = document.createElement("p");
-        emptyNotice.className = "card-hint";
-        emptyNotice.style.margin = "0.5rem 0";
-        emptyNotice.textContent = "No expenses recorded yet.";
-        legend.append(emptyNotice);
-        return;
-      }
-
+    let segments = [];
+    if (totals.income > 0 && balance >= 0) {
+      const savingsRate = Math.round((balance / totals.income) * 100);
+      const expenseRate = 100 - savingsRate;
       if (badge) {
-        badge.textContent = `${expenseGroups.length} Categories`;
+        badge.textContent = `${savingsRate}% Retained`;
         badge.style.color = "var(--mint)";
         badge.style.borderColor = "";
       }
-      const top = expenseGroups[0];
-      const topPct = totals.expenses > 0 ? Math.round((top.amount / totals.expenses) * 100) : 0;
       if (centerVal) {
-        centerVal.textContent = `${topPct}%`;
+        centerVal.textContent = `${savingsRate}%`;
         centerVal.style.color = "var(--mint)";
         centerVal.style.fontSize = "";
       }
-      if (centerTxt) centerTxt.textContent = top.categoryName;
+      if (centerTxt) centerTxt.textContent = "Balance";
 
-      const categoryPalette = ["#4dd9a0", "#78b4f5", "#ffb26b", "#e07af7", "#ff7b8f", "#e6ea82", "#63e6be", "#b197fc"];
+      segments = [
+        { label: "Total Balance", amount: balance, pct: savingsRate, color: "var(--mint)" },
+        { label: "Total Expenses", amount: totals.expenses, pct: expenseRate, color: "var(--danger)" }
+      ];
+    } else if (totals.income > 0 && balance < 0) {
+      const deficit = Math.abs(balance);
+      const deficitRate = Math.round((deficit / totals.expenses) * 100);
+      const coveredRate = 100 - deficitRate;
+      if (badge) {
+        badge.textContent = "Deficit Alert";
+        badge.style.color = "var(--danger)";
+        badge.style.borderColor = "rgba(255, 123, 143, 0.4)";
+      }
+      if (centerVal) {
+        centerVal.textContent = `-${deficitRate}%`;
+        centerVal.style.color = "var(--danger)";
+        centerVal.style.fontSize = "";
+      }
+      if (centerTxt) centerTxt.textContent = "Deficit";
 
-      const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      bgCircle.setAttribute("cx", String(cx));
-      bgCircle.setAttribute("cy", String(cy));
-      bgCircle.setAttribute("r", String(radius));
-      bgCircle.setAttribute("fill", "none");
-      bgCircle.setAttribute("stroke", "var(--surface-raised)");
-      bgCircle.setAttribute("stroke-width", "20");
-      svg.append(bgCircle);
+      segments = [
+        { label: "Covered by Income", amount: totals.income, pct: coveredRate, color: "var(--mint)" },
+        { label: "Net Deficit", amount: deficit, pct: deficitRate, color: "var(--danger)" }
+      ];
+    } else {
+      if (badge) {
+        badge.textContent = "100% Outflow";
+        badge.style.color = "var(--danger)";
+        badge.style.borderColor = "rgba(255, 123, 143, 0.4)";
+      }
+      if (centerVal) {
+        centerVal.textContent = "100%";
+        centerVal.style.color = "var(--danger)";
+        centerVal.style.fontSize = "";
+      }
+      if (centerTxt) centerTxt.textContent = "Expenses";
 
-      let currentOffset = 0;
-      expenseGroups.forEach((group, index) => {
-        const pct = totals.expenses > 0 ? group.amount / totals.expenses : 0;
-        const strokeLength = pct * circumference;
-        const color = categoryPalette[index % categoryPalette.length];
-
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", String(cx));
-        circle.setAttribute("cy", String(cy));
-        circle.setAttribute("r", String(radius));
-        circle.setAttribute("fill", "none");
-        circle.setAttribute("stroke", color);
-        circle.setAttribute("stroke-width", "20");
-        circle.setAttribute("stroke-dasharray", `${strokeLength} ${circumference - strokeLength}`);
-        circle.setAttribute("stroke-dashoffset", String(-currentOffset));
-        circle.setAttribute("class", "donut-slice");
-        circle.setAttribute("aria-label", `${group.categoryName}: ${formatCurrency(group.amount)}`);
-
-        circle.addEventListener("mouseenter", () => {
-          if (centerVal) {
-            centerVal.textContent = formatCurrency(group.amount);
-            centerVal.style.fontSize = "0.95rem";
-          }
-          if (centerTxt) centerTxt.textContent = group.categoryName;
-        });
-        circle.addEventListener("mouseleave", () => {
-          if (centerVal) {
-            centerVal.style.fontSize = "";
-            centerVal.textContent = `${topPct}%`;
-          }
-          if (centerTxt) centerTxt.textContent = top.categoryName;
-        });
-
-        svg.append(circle);
-        currentOffset += strokeLength;
-
-        const row = document.createElement("div");
-        row.className = "legend-item";
-        row.innerHTML = `
-          <div class="legend-item-left">
-            <span class="legend-dot" style="background:${color};"></span>
-            <span class="legend-label">${group.categoryName}</span>
-          </div>
-          <div class="legend-item-right">
-            <span class="legend-val">${formatCurrency(group.amount)}</span>
-            <span class="legend-pct">${Math.round(pct * 100)}%</span>
-          </div>
-        `;
-        legend.append(row);
-      });
+      segments = [
+        { label: "Total Expenses", amount: totals.expenses, pct: 100, color: "var(--danger)" }
+      ];
     }
+
+    const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    bgCircle.setAttribute("cx", String(cx));
+    bgCircle.setAttribute("cy", String(cy));
+    bgCircle.setAttribute("r", String(radius));
+    bgCircle.setAttribute("fill", "none");
+    bgCircle.setAttribute("stroke", "var(--surface-raised)");
+    bgCircle.setAttribute("stroke-width", "20");
+    svg.append(bgCircle);
+
+    let currentOffset = 0;
+    segments.forEach((seg) => {
+      if (seg.pct <= 0) return;
+      const strokeLength = (seg.pct / 100) * circumference;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", String(cx));
+      circle.setAttribute("cy", String(cy));
+      circle.setAttribute("r", String(radius));
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", seg.color);
+      circle.setAttribute("stroke-width", "20");
+      circle.setAttribute("stroke-dasharray", `${strokeLength} ${circumference - strokeLength}`);
+      circle.setAttribute("stroke-dashoffset", String(-currentOffset));
+      circle.setAttribute("class", "donut-slice");
+      circle.setAttribute("aria-label", `${seg.label}: ${seg.pct}%`);
+
+      circle.addEventListener("mouseenter", () => {
+        if (centerVal) {
+          centerVal.textContent = formatCurrency(seg.amount);
+          centerVal.style.fontSize = "0.95rem";
+        }
+        if (centerTxt) centerTxt.textContent = seg.label;
+      });
+      circle.addEventListener("mouseleave", () => {
+        if (centerVal) centerVal.style.fontSize = "";
+        renderOverviewChart();
+      });
+
+      svg.append(circle);
+      currentOffset += strokeLength;
+    });
+
+    // Integrated Legend for the 3 metrics: Total Balance, Income, Expenses
+    const legendData = [
+      { label: "Total Balance", amount: balance, color: "var(--mint)", pct: totals.income > 0 ? `${Math.round((balance / totals.income) * 100)}%` : "" },
+      { label: "Total Income", amount: totals.income, color: "#18a66a", pct: "Inflows" },
+      { label: "Total Expenses", amount: totals.expenses, color: "var(--danger)", pct: totals.income > 0 ? `${Math.round((totals.expenses / totals.income) * 100)}%` : "Outflows" }
+    ];
+
+    legendData.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "legend-item";
+      row.innerHTML = `
+        <div class="legend-item-left">
+          <span class="legend-dot" style="background:${item.color};"></span>
+          <span class="legend-label">${item.label}</span>
+        </div>
+        <div class="legend-item-right">
+          <span class="legend-val">${formatCurrency(item.amount)}</span>
+          ${item.pct ? `<span class="legend-pct">${item.pct}</span>` : ""}
+        </div>
+      `;
+      row.addEventListener("mouseenter", () => {
+        if (centerVal) {
+          centerVal.textContent = formatCurrency(item.amount);
+          centerVal.style.fontSize = "0.95rem";
+        }
+        if (centerTxt) centerTxt.textContent = item.label;
+      });
+      row.addEventListener("mouseleave", () => {
+        if (centerVal) centerVal.style.fontSize = "";
+        renderOverviewChart();
+      });
+      legend.append(row);
+    });
   }
 
   function renderVisualization() {
@@ -1139,34 +1035,34 @@
       const items = document.createElement("div");
       items.className = "category-group-items";
       categories.forEach((category) => {
-      const item = document.createElement("div");
-      item.className = "category-item";
-      const name = document.createElement("span");
-      name.textContent = category.name;
-      const type = document.createElement("small");
-      type.className = "category-type";
-      type.textContent = categoryTypes(category).length === 2
-        ? "Income and expenses"
-        : categoryTypes(category)[0] === "income" ? "Income" : "Expenses";
-      const actions = document.createElement("div");
-      actions.className = "transaction-actions";
-      const rename = document.createElement("button");
-      rename.className = "button button-secondary";
-      rename.type = "button";
-      rename.textContent = "Rename";
-      rename.setAttribute("aria-label", `Rename ${category.name}`);
-      rename.addEventListener("click", () => renameCategory(category.id));
-      const remove = document.createElement("button");
-      remove.className = "button button-secondary";
-      remove.type = "button";
-      remove.textContent = "Delete";
-      remove.setAttribute("aria-label", `Delete ${category.name}`);
-      remove.addEventListener("click", () => removeCategory(category.id));
-      actions.append(rename, remove);
-      const label = document.createElement("div");
-      label.append(name, type);
-      item.append(label, actions);
-      items.append(item);
+        const item = document.createElement("div");
+        item.className = "category-item";
+        const name = document.createElement("span");
+        name.textContent = category.name;
+        const type = document.createElement("small");
+        type.className = "category-type";
+        type.textContent = categoryTypes(category).length === 2
+          ? "Income and expenses"
+          : categoryTypes(category)[0] === "income" ? "Income" : "Expenses";
+        const actions = document.createElement("div");
+        actions.className = "transaction-actions";
+        const rename = document.createElement("button");
+        rename.className = "button button-secondary";
+        rename.type = "button";
+        rename.textContent = "Rename";
+        rename.setAttribute("aria-label", `Rename ${category.name}`);
+        rename.addEventListener("click", () => renameCategory(category.id));
+        const remove = document.createElement("button");
+        remove.className = "button button-secondary";
+        remove.type = "button";
+        remove.textContent = "Delete";
+        remove.setAttribute("aria-label", `Delete ${category.name}`);
+        remove.addEventListener("click", () => removeCategory(category.id));
+        actions.append(rename, remove);
+        const label = document.createElement("div");
+        label.append(name, type);
+        item.append(label, actions);
+        items.append(item);
       });
       groupWrapper.append(items);
       list.append(groupWrapper);
@@ -1319,157 +1215,11 @@
     if (mobileDropdown) mobileDropdown.hidden = false;
   }
 
-  function generateInsights(state) {
-    const list = [];
-    if (!state || !Array.isArray(state.transactions)) return list;
-
-    const totals = calculateTotals(state.transactions);
-    const balance = totals.income - totals.expenses;
-    const count = state.transactions.length;
-
-    if (count === 0) {
-      list.push({
-        type: "info",
-        icon: "✨",
-        title: "Welcome to MintMap",
-        message: "Add your first transaction or launch the demo to activate live spending analysis and financial insights."
-      });
-      return list;
-    }
-
-    if (balance < 0) {
-      list.push({
-        type: "warning",
-        icon: "⚠️",
-        title: "Cash Flow Deficit",
-        message: `Total expenses exceed income by ${formatCurrency(Math.abs(balance))}. Outflows are currently outpacing your inflows.`
-      });
-    } else if (totals.income > 0) {
-      const savingsRate = Math.round((balance / totals.income) * 100);
-      list.push({
-        type: "positive",
-        icon: "📈",
-        title: `${savingsRate}% Savings Retained`,
-        message: `You have retained ${savingsRate}% of all recorded income. Net balance stands at ${formatCurrency(balance)}.`
-      });
-    }
-
-    const expenseGroups = global.MintMapState.aggregateExpensesByCategory(state);
-    if (expenseGroups.length > 0 && totals.expenses > 0) {
-      const top = expenseGroups[0];
-      const topPct = Math.round((top.amount / totals.expenses) * 100);
-      list.push({
-        type: "info",
-        icon: "🛍️",
-        title: `Top Outflow: ${top.categoryName}`,
-        message: `${top.categoryName} represents ${topPct}% of your total spending (${formatCurrency(top.amount)}).`,
-        actionLabel: `Filter by ${top.categoryName}`,
-        actionCategoryId: top.categoryId
-      });
-    }
-
-    const expenses = state.transactions.filter((t) => t.type === "expense");
-    if (expenses.length > 0) {
-      const largest = expenses.reduce((max, t) => (t.amount > max.amount ? t : max), expenses[0]);
-      list.push({
-        type: "neutral",
-        icon: "💳",
-        title: "Largest Single Expense",
-        message: `"${largest.description}" for ${formatCurrency(largest.amount)} on ${largest.date}.`,
-        actionLabel: "View in list",
-        actionTxId: largest.id
-      });
-    }
-
-    if (count >= 5) {
-      list.push({
-        type: "positive",
-        icon: "🎯",
-        title: `${count} Transactions Tracked`,
-        message: "Your financial history provides strong spending accuracy. Keep logging to stay on course."
-      });
-    }
-
-    list.push({
-      type: "neutral",
-      icon: "🔒",
-      title: "Private by Design",
-      message: "MintMap stores 100% of your financial data directly in this browser with zero external tracking."
-    });
-
-    return list;
-  }
-
-  function renderInsights() {
-    const listEl = get("#notification-list");
-    const badgeEl = get("#notification-badge");
-    const countEl = get("#notification-active-count");
-    if (!listEl) return;
-
-    listEl.replaceChildren();
-    const insights = generateInsights(state);
-
-    if (badgeEl) {
-      badgeEl.textContent = String(insights.length);
-      badgeEl.hidden = insights.length === 0;
-    }
-    if (countEl) {
-      countEl.textContent = `${insights.length} active`;
-    }
-
-    if (insights.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "notification-empty";
-      empty.innerHTML = `<strong>You're all caught up.</strong><p>MintMap has no active alerts.</p>`;
-      listEl.append(empty);
-      return;
-    }
-
-    insights.forEach((insight) => {
-      const item = document.createElement("div");
-      item.className = `notification-item notification-item--${insight.type}`;
-      item.innerHTML = `
-        <span class="notification-item-icon" aria-hidden="true">${insight.icon}</span>
-        <div class="notification-item-text">
-          <strong>${insight.title}</strong>
-          <p>${insight.message}</p>
-          ${insight.actionLabel ? `<button type="button" class="notification-item-action">${insight.actionLabel} →</button>` : ""}
-        </div>
-      `;
-
-      if (insight.actionCategoryId) {
-        const btn = item.querySelector(".notification-item-action");
-        if (btn) {
-          btn.addEventListener("click", () => {
-            get("#notification-panel").hidden = true;
-            get("#notification-toggle").setAttribute("aria-expanded", "false");
-            categoryFilter = insight.actionCategoryId;
-            get("#filter-category").value = insight.actionCategoryId;
-            renderTransactions();
-            get("#transactions-heading")?.scrollIntoView({ behavior: "smooth" });
-          });
-        }
-      } else if (insight.actionTxId) {
-        const btn = item.querySelector(".notification-item-action");
-        if (btn) {
-          btn.addEventListener("click", () => {
-            get("#notification-panel").hidden = true;
-            get("#notification-toggle").setAttribute("aria-expanded", "false");
-            jumpToTransaction(insight.actionTxId);
-          });
-        }
-      }
-
-      listEl.append(item);
-    });
-  }
-
   function render() {
     renderSummary();
     renderTransactions();
     renderCategories();
     renderVisualization();
-    renderInsights();
     get("#sample-data-banner").hidden = !demoMode;
     get("#launch-demo").hidden = demoMode;
     get("#transaction-form-heading").textContent = demoMode ? "Try a transaction" : (editingTransactionId ? "Edit transaction" : "Add a transaction");
@@ -1518,6 +1268,8 @@
     get("#transaction-form-heading").textContent = "Add a transaction";
     get("#transaction-submit").textContent = "Save transaction";
     get("#transaction-cancel").hidden = true;
+    const panel = get(".transaction-panel");
+    if (panel) panel.classList.remove("is-editing");
     clearFieldErrors();
   }
 
@@ -1526,9 +1278,8 @@
     clearFieldErrors();
     const isEditing = Boolean(editingTransactionId);
     const formData = readForm();
-    const candidate = editingTransactionId
-      ? { ...formData, id: editingTransactionId }
-      : { ...formData, id: `tx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` };
+    const candidateId = editingTransactionId || `tx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const candidate = { ...formData, id: candidateId };
     const operation = isEditing
       ? global.MintMapState.updateTransaction(state, editingTransactionId, candidate)
       : global.MintMapState.addTransaction(state, candidate);
@@ -1545,6 +1296,18 @@
     render();
     resetForm();
     setStatus(isEditing ? "Transaction updated." : "Transaction saved.", "info", "form");
+
+    // Smoothly highlight and reveal the newly saved/updated transaction
+    setTimeout(() => {
+      const savedEl = document.getElementById(`tx-${candidate.id}`);
+      if (savedEl) {
+        savedEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        savedEl.classList.remove("transaction-highlight");
+        void savedEl.offsetWidth;
+        savedEl.classList.add("transaction-highlight");
+        setTimeout(() => savedEl.classList.remove("transaction-highlight"), 2500);
+      }
+    }, 60);
   }
 
   function beginEdit(transactionId) {
@@ -1565,6 +1328,12 @@
     get("#transaction-form-heading").textContent = "Edit transaction";
     get("#transaction-submit").textContent = "Save changes";
     get("#transaction-cancel").hidden = false;
+
+    const panel = get(".transaction-panel");
+    if (panel) {
+      panel.classList.add("is-editing");
+      panel.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     get("#transaction-amount").focus();
   }
 
@@ -1574,20 +1343,29 @@
       return;
     }
 
-    const operation = global.MintMapState.deleteTransaction(state, transactionId);
-    if (!operation.ok) {
-      setStatus(operation.errors.join(" "), "error");
-      return;
-    }
-    if (!persist(operation.state)) {
-      return;
+    const itemEl = document.getElementById(`tx-${transactionId}`);
+    if (itemEl) {
+      itemEl.style.transition = "opacity 200ms ease, transform 200ms ease";
+      itemEl.style.opacity = "0";
+      itemEl.style.transform = "scale(0.96) translateY(-4px)";
     }
 
-    if (editingTransactionId === transactionId) {
-      resetForm();
-    }
-    render();
-    setStatus("Transaction deleted.");
+    setTimeout(() => {
+      const operation = global.MintMapState.deleteTransaction(state, transactionId);
+      if (!operation.ok) {
+        setStatus(operation.errors.join(" "), "error");
+        return;
+      }
+      if (!persist(operation.state)) {
+        return;
+      }
+
+      if (editingTransactionId === transactionId) {
+        resetForm();
+      }
+      render();
+      setStatus("Transaction deleted.", "info", "form");
+    }, 180);
   }
 
   function refreshCategoryControls() {
@@ -1716,28 +1494,6 @@
     populateCategorySelect(get("#filter-category"), state.categories, false);
     get("#transaction-form").addEventListener("submit", handleSubmit);
     get("#transaction-cancel").addEventListener("click", resetForm);
-    // Chart Tab toggles
-    const tabFlow = get("#chart-tab-flow");
-    const tabCategories = get("#chart-tab-categories");
-    if (tabFlow && tabCategories) {
-      tabFlow.addEventListener("click", () => {
-        activeChartTab = "flow";
-        tabFlow.classList.add("active");
-        tabFlow.setAttribute("aria-selected", "true");
-        tabCategories.classList.remove("active");
-        tabCategories.setAttribute("aria-selected", "false");
-        renderOverviewChart();
-      });
-      tabCategories.addEventListener("click", () => {
-        activeChartTab = "categories";
-        tabCategories.classList.add("active");
-        tabCategories.setAttribute("aria-selected", "true");
-        tabFlow.classList.remove("active");
-        tabFlow.setAttribute("aria-selected", "false");
-        renderOverviewChart();
-      });
-    }
-
     // Live Search bindings
     function syncAndSearch(val) {
       searchQuery = val;
@@ -1822,56 +1578,31 @@
       button.querySelector("span").textContent = expanded ? "Show Categories" : "Hide Categories";
       list.hidden = expanded;
     });
-    get("#notification-toggle").addEventListener("click", () => {
-      const button = get("#notification-toggle");
-      const panel = get("#notification-panel");
-      const expanded = button.getAttribute("aria-expanded") === "true";
-      button.setAttribute("aria-expanded", String(!expanded));
-      panel.hidden = expanded;
-    });
-
-    const notifClose = get("#notification-close");
-    if (notifClose) {
-      notifClose.addEventListener("click", () => {
-        get("#notification-toggle").setAttribute("aria-expanded", "false");
-        get("#notification-panel").hidden = true;
-      });
-    }
-
     get("#theme-toggle").addEventListener("click", () => {
       const current = document.documentElement.dataset.theme;
       const systemLight = global.matchMedia("(prefers-color-scheme: light)").matches;
       applyTheme(current === "light" || (!current && systemLight) ? "dark" : "light");
     });
 
-    // Click outside handler for Popups & Dropdowns
+    // Click outside handler for Search Dropdown
     document.addEventListener("click", (event) => {
-      if (!event.target.closest(".notification-wrap")) {
-        get("#notification-toggle").setAttribute("aria-expanded", "false");
-        get("#notification-panel").hidden = true;
-      }
       if (!event.target.closest(".header-search-wrap")) {
         const hDrop = get("#header-search-dropdown");
         if (hDrop) hDrop.hidden = true;
       }
     });
 
-    // Keyboard Shortcuts (Escape to close, / or Ctrl+K to search)
+    // Keyboard Shortcuts (Escape to close search, / or Ctrl+K to search)
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         const hDrop = get("#header-search-dropdown");
         const mDrop = get("#mobile-search-dropdown");
         const mPanel = get("#mobile-search-panel");
-        const nPanel = get("#notification-panel");
         if (hDrop) hDrop.hidden = true;
         if (mDrop) mDrop.hidden = true;
         if (mPanel) {
           mPanel.hidden = true;
           if (mobileToggle) mobileToggle.setAttribute("aria-expanded", "false");
-        }
-        if (nPanel) {
-          nPanel.hidden = true;
-          get("#notification-toggle").setAttribute("aria-expanded", "false");
         }
       } else if (
         (event.key === "/" || (event.ctrlKey && event.key.toLowerCase() === "k") || (event.metaKey && event.key.toLowerCase() === "k"))
