@@ -259,6 +259,29 @@
     return { ok: true, state: nextState, errors: [] };
   }
 
+  function aggregateExpensesByCategory(state) {
+    const totals = new Map();
+    if (!isPlainObject(state) || !Array.isArray(state.transactions) || !Array.isArray(state.categories)) {
+      return [];
+    }
+
+    state.transactions.forEach((transaction) => {
+      if (transaction.type !== "expense" || !Number.isFinite(transaction.amount)) {
+        return;
+      }
+      const current = totals.get(transaction.categoryId) || 0;
+      totals.set(transaction.categoryId, Math.round((current + transaction.amount) * 100) / 100);
+    });
+
+    return [...totals.entries()]
+      .map(([categoryId, amount]) => ({
+        categoryId,
+        categoryName: state.categories.find((category) => category.id === categoryId)?.name || "Unknown category",
+        amount
+      }))
+      .sort((left, right) => right.amount - left.amount);
+  }
+
   function addTransaction(state, transaction) {
     const nextState = clone(state);
     if (!validateState(nextState).valid) {
@@ -452,6 +475,7 @@
     addCategory,
     updateCategory,
     deleteCategory,
+    aggregateExpensesByCategory,
     addTransaction,
     updateTransaction,
     deleteTransaction,
@@ -616,6 +640,57 @@
     get("#expense-hint").textContent = totals.expenses ? "Across all expenses" : "No expenses recorded";
   }
 
+  function renderVisualization() {
+    const visualization = get("#spending-visualization");
+    const textSummary = get("#spending-text-summary");
+    const emptyState = get("#visualization-empty-state");
+    const groups = global.MintMapState.aggregateExpensesByCategory(state);
+    const maximum = groups[0]?.amount || 0;
+
+    visualization.replaceChildren();
+    textSummary.replaceChildren();
+    emptyState.hidden = groups.length > 0;
+    visualization.hidden = groups.length === 0;
+    textSummary.hidden = groups.length === 0;
+
+    if (groups.length === 0) {
+      return;
+    }
+
+    const summaryHeading = document.createElement("h3");
+    summaryHeading.textContent = "Accessible spending summary";
+    textSummary.append(summaryHeading);
+    const summaryList = document.createElement("ul");
+    summaryList.className = "spending-summary-list";
+
+    groups.forEach((group) => {
+      const row = document.createElement("div");
+      row.className = "spending-row";
+      const label = document.createElement("div");
+      label.className = "spending-row-heading";
+      const category = document.createElement("span");
+      category.textContent = group.categoryName;
+      const amount = document.createElement("span");
+      amount.textContent = formatCurrency(group.amount);
+      label.append(category, amount);
+      const track = document.createElement("div");
+      track.className = "spending-bar-track";
+      const bar = document.createElement("div");
+      bar.className = "spending-bar";
+      bar.style.width = `${Math.max((group.amount / maximum) * 100, 4)}%`;
+      bar.setAttribute("aria-hidden", "true");
+      track.append(bar);
+      row.append(label, track);
+      visualization.append(row);
+
+      const summaryItem = document.createElement("li");
+      summaryItem.textContent = `${group.categoryName}: ${formatCurrency(group.amount)}`;
+      summaryList.append(summaryItem);
+    });
+
+    textSummary.append(summaryList);
+  }
+
   function renderTransactions() {
     const list = get("#transaction-list");
     const emptyState = get("#transaction-empty-state");
@@ -638,9 +713,12 @@
       details.className = "transaction-details";
       const title = document.createElement("h3");
       title.textContent = transaction.description;
+      const typeBadge = document.createElement("span");
+      typeBadge.className = `transaction-type-badge ${transaction.type}`;
+      typeBadge.textContent = transaction.type === "income" ? "Income" : "Expense";
       const metadata = document.createElement("p");
       metadata.textContent = `${transaction.date} · ${categoryName(transaction.categoryId)} · ${transaction.type}`;
-      details.append(title, metadata);
+      details.append(typeBadge, title, metadata);
       if (transaction.notes) {
         const notes = document.createElement("p");
         notes.className = "transaction-notes";
@@ -686,7 +764,28 @@
   function renderCategories() {
     const list = get("#category-list");
     list.replaceChildren();
-    state.categories.forEach((category) => {
+    const groups = [
+      { type: "expense", title: "Expense categories", description: "Where your money goes" },
+      { type: "income", title: "Income categories", description: "Where your money comes from" }
+    ];
+    groups.forEach((group) => {
+      const categories = state.categories.filter((category) => categoryTypes(category).includes(group.type));
+      if (categories.length === 0) {
+        return;
+      }
+      const groupWrapper = document.createElement("div");
+      groupWrapper.className = "category-group";
+      const heading = document.createElement("div");
+      heading.className = "category-group-heading";
+      const title = document.createElement("h3");
+      title.textContent = group.title;
+      const description = document.createElement("p");
+      description.textContent = group.description;
+      heading.append(title, description);
+      groupWrapper.append(heading);
+      const items = document.createElement("div");
+      items.className = "category-group-items";
+      categories.forEach((category) => {
       const item = document.createElement("div");
       item.className = "category-item";
       const name = document.createElement("span");
@@ -714,7 +813,10 @@
       const label = document.createElement("div");
       label.append(name, type);
       item.append(label, actions);
-      list.append(item);
+      items.append(item);
+      });
+      groupWrapper.append(items);
+      list.append(groupWrapper);
     });
   }
 
@@ -722,6 +824,7 @@
     renderSummary();
     renderTransactions();
     renderCategories();
+    renderVisualization();
   }
 
   function readForm() {
