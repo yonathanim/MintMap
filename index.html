@@ -26,7 +26,15 @@
     <header class="site-header">
       <div class="container header-content">
         <a class="brand" href="/" aria-label="MintMap home">
-          <span class="brand-mark" aria-hidden="true"><span>↗</span></span>
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+              <!-- Map pin outline -->
+              <path d="M11 2C7.96 2 5.5 4.46 5.5 7.5C5.5 11.75 11 19 11 19C11 19 16.5 11.75 16.5 7.5C16.5 4.46 14.04 2 11 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
+              <!-- Growth arrow inside pin -->
+              <polyline points="8,9.5 10,7.5 12,9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <line x1="10" y1="7.5" x2="10" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
           <span>
             <strong>MintMap</strong>
             <span class="brand-tagline">Your money. Your direction.</span>
@@ -63,7 +71,6 @@
         </p>
         <p class="intro-privacy"><span class="status-dot" aria-hidden="true"></span>Your information stays in this browser.</p>
         <button id="launch-demo" class="button button-secondary intro-demo-button" type="button">Explore fictional demo</button>
-        <p id="app-status" class="app-status" role="status" aria-live="polite"></p>
       </section>
 
       <section class="summary-grid" aria-labelledby="summary-heading">
@@ -140,6 +147,7 @@
               <button id="transaction-submit" class="button button-primary" type="submit">Save transaction</button>
               <button id="transaction-cancel" class="button button-secondary" type="button" hidden>Cancel edit</button>
             </div>
+            <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
           </form>
         </section>
 
