@@ -4,6 +4,10 @@
 
 MintMap is a personal finance dashboard designed to make tracking money simpler. It uses a dark interface with mint-green accents and displays financial information in Ethiopian birr (ETB).
 
+## Current implementation
+
+The current milestone includes the static application shell and the validated transaction/category state layer. State is versioned and stored in the browser through LocalStorage when available; the visible transaction workflow will be added in a later milestone.
+
 ## Overview
 
 MintMap is being built with HTML, CSS, and JavaScript, with a focus on a clean interface, responsive design, and straightforward functionality.
