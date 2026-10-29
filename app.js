@@ -497,12 +497,46 @@
     maximumFractionDigits: 2
   });
   let state = null;
+  let realState = null;
+  let demoMode = false;
   let editingTransactionId = null;
   let searchQuery = "";
   let categoryFilter = "";
+  const THEME_STORAGE_KEY = "mintmap.theme";
 
   function get(selector) {
     return document.querySelector(selector);
+  }
+
+  function applyTheme(theme, persist = true) {
+    const root = document.documentElement;
+    const button = get("#theme-toggle");
+    if (theme === "light" || theme === "dark") {
+      root.dataset.theme = theme;
+      if (persist) {
+        try {
+          localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch {
+          setStatus("Theme changed for this session; browser storage is unavailable.", "error");
+        }
+      }
+    } else {
+      delete root.dataset.theme;
+      if (persist) {
+        try {
+          localStorage.removeItem(THEME_STORAGE_KEY);
+        } catch {
+          setStatus("System theme restored for this session; browser storage is unavailable.", "error");
+        }
+      }
+    }
+    if (button) {
+      const isLight = root.dataset.theme === "light"
+        || (!root.dataset.theme && global.matchMedia("(prefers-color-scheme: light)").matches);
+      button.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
+      button.setAttribute("aria-pressed", String(isLight));
+      button.innerHTML = `<span aria-hidden="true">${isLight ? "☾" : "☼"}</span><span>${isLight ? "Dark mode" : "Light mode"}</span>`;
+    }
   }
 
   function setStatus(message, type = "info") {
@@ -763,6 +797,7 @@
 
   function renderCategories() {
     const list = get("#category-list");
+    get("#category-count").textContent = `${state.categories.length} categories`;
     list.replaceChildren();
     const groups = [
       { type: "expense", title: "Expense categories", description: "Where your money goes" },
@@ -825,6 +860,9 @@
     renderTransactions();
     renderCategories();
     renderVisualization();
+    get("#sample-data-banner").hidden = !demoMode;
+    get("#launch-demo").hidden = demoMode;
+    get("#transaction-form-heading").textContent = demoMode ? "Try a transaction" : (editingTransactionId ? "Edit transaction" : "Add a transaction");
   }
 
   function readForm() {
@@ -839,12 +877,18 @@
   }
 
   function persist(nextState) {
+    if (demoMode) {
+      state = nextState;
+      global.MintMapApp.state = state;
+      return true;
+    }
     const saveResult = global.MintMapState.saveState(nextState);
     if (!saveResult.ok) {
       setStatus(saveResult.error.message, "error");
       return false;
     }
     state = nextState;
+    realState = state;
     global.MintMapApp.state = state;
     return true;
   }
@@ -997,8 +1041,8 @@
     persistAndRender(operation.state, "Category deleted.");
   }
 
-  function loadSampleData() {
-    if (state.transactions.length > 0 && !global.confirm("Add fictional sample transactions without replacing your existing data?")) {
+  function enterDemoMode() {
+    if (demoMode) {
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
@@ -1007,7 +1051,7 @@
       { id: `sample-${Date.now()}-2`, type: "expense", amount: 850, categoryId: "food", date: today, description: "Weekly groceries", notes: "Fictional sample data", isSample: true },
       { id: `sample-${Date.now()}-3`, type: "expense", amount: 420, categoryId: "transport", date: today, description: "Transport pass", notes: "Fictional sample data", isSample: true }
     ];
-    let nextState = state;
+    let nextState = global.MintMapState.createInitialState();
     for (const sample of samples) {
       const operation = global.MintMapState.addTransaction(nextState, sample);
       if (!operation.ok) {
@@ -1016,7 +1060,25 @@
       }
       nextState = operation.state;
     }
-    persistAndRender(nextState, "Fictional sample data added. It is clearly marked and did not replace your transactions.");
+    realState = state;
+    state = nextState;
+    demoMode = true;
+    render();
+    setStatus("Demo mode is active. These fictional records will not be saved.", "info");
+  }
+
+  function exitDemoMode() {
+    if (!demoMode) {
+      return;
+    }
+    state = realState;
+    realState = null;
+    demoMode = false;
+    editingTransactionId = null;
+    refreshCategoryControls();
+    resetForm();
+    render();
+    setStatus(state.transactions.length ? "Your saved data is ready." : "Demo ended. Ready for your first transaction.");
   }
 
   function initialize() {
@@ -1028,12 +1090,20 @@
     }
 
     state = loadResult.state;
+    realState = state;
+    applyTheme(document.documentElement.dataset.theme || null, false);
     populateCategorySelect(get("#transaction-category"), state.categories, true);
     populateCategorySelect(get("#filter-category"), state.categories, false);
     get("#transaction-form").addEventListener("submit", handleSubmit);
     get("#transaction-cancel").addEventListener("click", resetForm);
     get("#transaction-search").addEventListener("input", (event) => {
       searchQuery = event.target.value;
+      get("#header-search").value = searchQuery;
+      renderTransactions();
+    });
+    get("#header-search").addEventListener("input", (event) => {
+      searchQuery = event.target.value;
+      get("#transaction-search").value = searchQuery;
       renderTransactions();
     });
     get("#filter-category").addEventListener("change", (event) => {
@@ -1047,7 +1117,38 @@
       get("#filter-category").value = "";
       renderTransactions();
     });
-    get("#load-sample-data").addEventListener("click", loadSampleData);
+    get("#empty-explore-demo").addEventListener("click", enterDemoMode);
+    get("#launch-demo").addEventListener("click", enterDemoMode);
+    get("#exit-demo").addEventListener("click", exitDemoMode);
+    get("#empty-add-transaction").addEventListener("click", () => {
+      get("#transaction-amount").focus();
+    });
+    get("#toggle-categories").addEventListener("click", () => {
+      const button = get("#toggle-categories");
+      const list = get("#category-list");
+      const expanded = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!expanded));
+      button.querySelector("span").textContent = expanded ? "Show Categories" : "Hide Categories";
+      list.hidden = expanded;
+    });
+    get("#notification-toggle").addEventListener("click", () => {
+      const button = get("#notification-toggle");
+      const panel = get("#notification-panel");
+      const expanded = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!expanded));
+      panel.hidden = expanded;
+    });
+    get("#theme-toggle").addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme;
+      const systemLight = global.matchMedia("(prefers-color-scheme: light)").matches;
+      applyTheme(current === "light" || (!current && systemLight) ? "dark" : "light");
+    });
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".notification-wrap")) {
+        get("#notification-toggle").setAttribute("aria-expanded", "false");
+        get("#notification-panel").hidden = true;
+      }
+    });
     get("#add-category").addEventListener("click", () => {
       const form = get("#category-form");
       form.hidden = false;
