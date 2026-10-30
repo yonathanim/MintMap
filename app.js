@@ -604,29 +604,25 @@
     }
 
     const selectedValue = select.value;
+    const transactionType = get("#transaction-type")?.value;
+    const availableCategories = categories.filter((category) => includePlaceholder
+      ? categoryTypes(category).includes(transactionType)
+      : true);
+
     select.replaceChildren();
     const firstOption = document.createElement("option");
     firstOption.value = "";
     firstOption.textContent = includePlaceholder ? "Select category" : "All categories";
     select.append(firstOption);
 
-    const transactionType = get("#transaction-type")?.value;
-    categories
-      .filter((category) => includePlaceholder
-        ? categoryTypes(category).includes(transactionType)
-        : true)
-      .forEach((category) => {
-        const option = document.createElement("option");
-        option.value = category.id;
-        option.textContent = category.name;
-        select.append(option);
-      });
+    availableCategories.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category.id;
+      option.textContent = category.name;
+      select.append(option);
+    });
 
-    if (categories
-      .filter((category) => includePlaceholder
-        ? categoryTypes(category).includes(transactionType)
-        : true)
-      .some((category) => category.id === selectedValue)) {
+    if (availableCategories.some((category) => category.id === selectedValue)) {
       select.value = selectedValue;
     }
   }
@@ -1264,6 +1260,7 @@
   function resetForm() {
     get("#transaction-form").reset();
     get("#transaction-date").value = todayDate();
+    populateCategorySelect(get("#transaction-category"), state.categories, true);
     editingTransactionId = null;
     get("#transaction-form-heading").textContent = "Add a transaction";
     get("#transaction-submit").textContent = "Save transaction";
