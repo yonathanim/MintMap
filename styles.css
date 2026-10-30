@@ -198,18 +198,10 @@ textarea:focus-visible {
   position: relative;
 }
 
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  color: var(--muted);
-  pointer-events: none;
-  flex-shrink: 0;
-}
-
 .header-search input {
   width: min(16rem, 24vw);
   min-height: 2.2rem;
-  padding: 0.4rem 0.75rem 0.4rem 2.2rem;
+  padding: 0.4rem 2.2rem 0.4rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 99rem;
   background: var(--input-background);
@@ -227,6 +219,29 @@ textarea:focus-visible {
 
 .header-search input::placeholder {
   color: var(--muted);
+}
+
+.search-submit {
+  position: absolute;
+  right: 0.65rem;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.search-submit:hover,
+.search-submit:focus-visible {
+  color: var(--mint);
+  background: var(--accent-soft);
+  outline: none;
 }
 
 /* ── Live Search Dropdown ── */
