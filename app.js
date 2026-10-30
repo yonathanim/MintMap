@@ -1112,7 +1112,7 @@
 
   function renderLiveSearch(query) {
     const headerDropdown = get("#header-search-dropdown");
-    const headerResults = get("#header-search-results");
+    const headerResults = get("#search-live-results");
     const headerCount = get("#search-live-count");
 
     const mobileDropdown = get("#mobile-search-dropdown");
@@ -1510,11 +1510,29 @@
     get("#header-search").addEventListener("input", (event) => {
       syncAndSearch(event.target.value);
     });
+    get("#header-search").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        syncAndSearch(event.currentTarget.value);
+      }
+    });
+
+    get("#header-search-submit").addEventListener("click", () => {
+      const input = get("#header-search");
+      syncAndSearch(input.value);
+      input.focus();
+    });
 
     const mobileInput = get("#mobile-search-input");
     if (mobileInput) {
       mobileInput.addEventListener("input", (event) => {
         syncAndSearch(event.target.value);
+      });
+      mobileInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          syncAndSearch(event.currentTarget.value);
+        }
       });
     }
 
