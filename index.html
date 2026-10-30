@@ -51,10 +51,11 @@
         <div class="header-actions">
           <div class="header-search-wrap">
             <label class="header-search">
-              <svg class="search-icon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <span class="sr-only">Search transactions</span>
               <input id="header-search" type="search" placeholder="Search transactions…" aria-label="Search transactions" autocomplete="off">
             </label>
+            <button id="header-search-submit" class="search-submit" type="button" aria-label="Search transactions">
+              <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </button>
             <div id="header-search-dropdown" class="search-live-dropdown" hidden role="region" aria-label="Search matches">
               <div class="search-live-head">
                 <span id="search-live-count" class="search-live-count">0 matches</span>
