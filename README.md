@@ -2,21 +2,27 @@
 
 **Your money. Your direction.**
 
-MintMap is a personal finance dashboard designed to make tracking money simpler. It uses a dark interface with mint-green accents and displays financial information in Ethiopian birr (ETB).
+MintMap is a clean, local-first finance dashboard for tracking income, expenses, and spending in Ethiopian birr (ETB).
 
-## Current implementation
+## Features
 
-The current milestone includes the static application shell and the validated transaction/category state layer. State is versioned and stored in the browser through LocalStorage when available; the visible transaction workflow will be added in a later milestone.
-
-## Overview
-
-MintMap is being built with HTML, CSS, and JavaScript, with a focus on a clean interface, responsive design, and straightforward functionality.
-
-## Planned Features
-
-- Financial overview for income, expenses, and balance
+- View income, expenses, and balance
 - Add, edit, and delete transactions
-- Search and filter transactions
-- Spending breakdown by category
-- Browser-based data persistence using LocalStorage
-- Responsive layout for desktop and mobile screens
+- Organize transactions with categories
+- Search and filter your activity
+- See spending by category
+- Use fictional demo data to explore the app
+- Keep data saved in your browser with LocalStorage
+- Responsive layout for desktop and mobile
+
+## Run locally
+
+MintMap uses HTML, CSS, and JavaScript.
+
+```bash
+python3 -m http.server 4173
+```
+
+Open <http://127.0.0.1:4173/> in your browser.
+
+Your data stays in your browser. MintMap does not use accounts, banks, payments, or cloud storage.
