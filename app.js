@@ -1079,11 +1079,7 @@
 
   function jumpToTransaction(txId) {
     const headerDropdown = get("#header-search-dropdown");
-    const mobileDropdown = get("#mobile-search-dropdown");
-    const mobilePanel = get("#mobile-search-panel");
     if (headerDropdown) headerDropdown.hidden = true;
-    if (mobileDropdown) mobileDropdown.hidden = true;
-    if (mobilePanel) mobilePanel.hidden = true;
 
     const targetEl = document.getElementById(`tx-${txId}`);
     if (targetEl) {
@@ -1115,14 +1111,9 @@
     const headerResults = get("#search-live-results");
     const headerCount = get("#search-live-count");
 
-    const mobileDropdown = get("#mobile-search-dropdown");
-    const mobileResults = get("#mobile-search-live-results");
-    const mobileCount = get("#mobile-search-live-count");
-
     const trimmed = (query || "").trim();
     if (!trimmed || !state) {
       if (headerDropdown) headerDropdown.hidden = true;
-      if (mobileDropdown) mobileDropdown.hidden = true;
       return;
     }
 
@@ -1138,7 +1129,6 @@
 
     const countText = `${matches.length} match${matches.length === 1 ? "" : "es"}`;
     if (headerCount) headerCount.textContent = countText;
-    if (mobileCount) mobileCount.textContent = countText;
 
     function populateContainer(container) {
       if (!container) return;
@@ -1186,7 +1176,6 @@
           editBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             if (headerDropdown) headerDropdown.hidden = true;
-            if (mobileDropdown) mobileDropdown.hidden = true;
             beginEdit(tx.id);
             get("#transaction-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
           });
@@ -1205,10 +1194,8 @@
     }
 
     populateContainer(headerResults);
-    populateContainer(mobileResults);
 
     if (headerDropdown) headerDropdown.hidden = false;
-    if (mobileDropdown) mobileDropdown.hidden = false;
   }
 
   function render() {
@@ -1495,10 +1482,8 @@
     function syncAndSearch(val) {
       searchQuery = val;
       const hInput = get("#header-search");
-      const mInput = get("#mobile-search-input");
       const tInput = get("#transaction-search");
       if (hInput && hInput.value !== val) hInput.value = val;
-      if (mInput && mInput.value !== val) mInput.value = val;
       if (tInput && tInput.value !== val) tInput.value = val;
       renderTransactions();
       renderLiveSearch(val);
@@ -1523,52 +1508,14 @@
       input.focus();
     });
 
-    const mobileInput = get("#mobile-search-input");
-    if (mobileInput) {
-      mobileInput.addEventListener("input", (event) => {
-        syncAndSearch(event.target.value);
-      });
-      mobileInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          syncAndSearch(event.currentTarget.value);
-        }
-      });
-    }
-
-    const mobileToggle = get("#mobile-search-toggle");
-    const mobilePanel = get("#mobile-search-panel");
-    const mobileClose = get("#mobile-search-close");
-    if (mobileToggle && mobilePanel) {
-      mobileToggle.addEventListener("click", () => {
-        const isHidden = mobilePanel.hidden;
-        mobilePanel.hidden = !isHidden;
-        mobileToggle.setAttribute("aria-expanded", String(isHidden));
-        if (isHidden && mobileInput) {
-          mobileInput.focus();
-          if (searchQuery) renderLiveSearch(searchQuery);
-        }
-      });
-    }
-    if (mobileClose && mobilePanel) {
-      mobileClose.addEventListener("click", () => {
-        mobilePanel.hidden = true;
-        if (mobileToggle) mobileToggle.setAttribute("aria-expanded", "false");
-      });
-    }
-
     function clearAllSearch() {
       syncAndSearch("");
       const hDrop = get("#header-search-dropdown");
-      const mDrop = get("#mobile-search-dropdown");
       if (hDrop) hDrop.hidden = true;
-      if (mDrop) mDrop.hidden = true;
     }
 
     const clearBtn1 = get("#search-live-clear");
-    const clearBtn2 = get("#mobile-search-live-clear");
     if (clearBtn1) clearBtn1.addEventListener("click", clearAllSearch);
-    if (clearBtn2) clearBtn2.addEventListener("click", clearAllSearch);
 
     get("#filter-category").addEventListener("change", (event) => {
       categoryFilter = event.target.value;
@@ -1611,14 +1558,7 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         const hDrop = get("#header-search-dropdown");
-        const mDrop = get("#mobile-search-dropdown");
-        const mPanel = get("#mobile-search-panel");
-        if (hDrop) hDrop.hidden = true;
-        if (mDrop) mDrop.hidden = true;
-        if (mPanel) {
-          mPanel.hidden = true;
-          if (mobileToggle) mobileToggle.setAttribute("aria-expanded", "false");
-        }
+          if (hDrop) hDrop.hidden = true;
       } else if (
         (event.key === "/" || (event.ctrlKey && event.key.toLowerCase() === "k") || (event.metaKey && event.key.toLowerCase() === "k"))
         && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)
@@ -1628,13 +1568,9 @@
         if (searchInput && window.innerWidth > 560) {
           searchInput.focus();
           searchInput.select();
-        } else if (mobileToggle && mobilePanel) {
-          mobilePanel.hidden = false;
-          mobileToggle.setAttribute("aria-expanded", "true");
-          if (mobileInput) {
-            mobileInput.focus();
-            mobileInput.select();
-          }
+        } else if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
         }
       }
     });
@@ -1673,6 +1609,9 @@
         } else {
           item.removeAttribute("aria-current");
         }
+      });
+      navigationSections.forEach(({ link: item, section }) => {
+        section.classList.toggle("nav-target-highlight", item === link);
       });
     }
 
