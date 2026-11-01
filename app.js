@@ -1655,6 +1655,47 @@
     get("#transaction-type").addEventListener("change", () => {
       populateCategorySelect(get("#transaction-category"), state.categories, true);
     });
+
+    const navigationLinks = [...document.querySelectorAll(".nav-link")];
+    const navigationSections = navigationLinks
+      .map((link) => ({
+        link,
+        section: document.querySelector(link.getAttribute("href"))
+      }))
+      .filter(({ section }) => section);
+
+    function setActiveNavigation(link) {
+      navigationLinks.forEach((item) => {
+        const isActive = item === link;
+        item.classList.toggle("active", isActive);
+        if (isActive) {
+          item.setAttribute("aria-current", "page");
+        } else {
+          item.removeAttribute("aria-current");
+        }
+      });
+    }
+
+    navigationLinks.forEach((link) => {
+      link.addEventListener("click", () => setActiveNavigation(link));
+    });
+
+    if ("IntersectionObserver" in global) {
+      const sectionObserver = new global.IntersectionObserver((entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visibleEntry) {
+          const target = navigationSections.find(({ section }) => section === visibleEntry.target);
+          if (target) {
+            setActiveNavigation(target.link);
+          }
+        }
+      }, { rootMargin: "-6rem 0px -55% 0px", threshold: [0.1, 0.5, 1] });
+      navigationSections.forEach(({ section }) => sectionObserver.observe(section));
+    }
+
+    setActiveNavigation(navigationLinks.find((link) => link.classList.contains("active")) || navigationLinks[0]);
     render();
     setStatus(loadResult.source === "initial" ? "Ready for your first transaction." : "Your saved data is ready.");
   }
