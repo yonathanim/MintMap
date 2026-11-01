@@ -491,8 +491,6 @@
   }
 
   const currencyFormatter = new Intl.NumberFormat("en-ET", {
-    style: "currency",
-    currency: "ETB",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
@@ -503,6 +501,10 @@
   let searchQuery = "";
   let categoryFilter = "";
   const THEME_STORAGE_KEY = "mintmap.theme";
+
+  function cloneState(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
 
   function get(selector) {
     return document.querySelector(selector);
@@ -571,7 +573,22 @@
   }
 
   function formatCurrency(amount) {
-    return currencyFormatter.format(amount);
+    const sign = amount < 0 ? "-" : "";
+    return `ETB ${sign}${currencyFormatter.format(Math.abs(amount))}`;
+  }
+
+  function formatTransactionCurrency(type, amount) {
+    const sign = type === "income" ? "+" : "-";
+    return `ETB ${sign}${currencyFormatter.format(Math.abs(amount))}`;
+  }
+
+  function setChartCenterValue(element, value) {
+    if (!element) {
+      return;
+    }
+    element.textContent = value;
+    const length = String(value).length;
+    element.style.fontSize = length > 14 ? "0.68rem" : length > 10 ? "0.82rem" : "1.05rem";
   }
 
   function categoryTypes(category) {
@@ -683,7 +700,9 @@
   function renderSummary() {
     const totals = calculateTotals(state.transactions);
     const balance = totals.income - totals.expenses;
-    get("#balance-value").textContent = formatCurrency(balance);
+    const balanceValue = get("#balance-value");
+    balanceValue.textContent = formatCurrency(balance);
+    balanceValue.classList.toggle("negative-value", balance < 0);
     get("#income-value").textContent = formatCurrency(totals.income);
     get("#expense-value").textContent = formatCurrency(totals.expenses);
     get("#balance-hint").textContent = state.transactions.length ? "Across all transactions" : "No transactions yet";
@@ -833,8 +852,7 @@
 
       circle.addEventListener("mouseenter", () => {
         if (centerVal) {
-          centerVal.textContent = formatCurrency(seg.amount);
-          centerVal.style.fontSize = "0.95rem";
+          setChartCenterValue(centerVal, formatCurrency(seg.amount));
         }
         if (centerTxt) centerTxt.textContent = seg.label;
       });
@@ -869,8 +887,7 @@
       `;
       row.addEventListener("mouseenter", () => {
         if (centerVal) {
-          centerVal.textContent = formatCurrency(item.amount);
-          centerVal.style.fontSize = "0.95rem";
+          setChartCenterValue(centerVal, formatCurrency(item.amount));
         }
         if (centerTxt) centerTxt.textContent = item.label;
       });
@@ -978,8 +995,8 @@
 
       const amount = document.createElement("p");
       amount.className = `transaction-amount transaction-amount-${transaction.type}`;
-      amount.textContent = `${transaction.type === "income" ? "+" : "-"}${formatCurrency(transaction.amount)}`;
-      amount.setAttribute("aria-label", `${transaction.type} ${formatCurrency(transaction.amount)}`);
+      amount.textContent = formatTransactionCurrency(transaction.type, transaction.amount);
+      amount.setAttribute("aria-label", `${transaction.type} ${formatCurrency(transaction.type === "income" ? transaction.amount : -transaction.amount)}`);
 
       const actions = document.createElement("div");
       actions.className = "transaction-actions";
@@ -1157,7 +1174,7 @@
             </div>
           </div>
           <div class="search-result-right">
-            <span class="search-result-amount ${tx.type}">${tx.type === "income" ? "+" : "-"}${formatCurrency(tx.amount)}</span>
+            <span class="search-result-amount ${tx.type}">${formatTransactionCurrency(tx.type, tx.amount)}</span>
             <button type="button" class="search-result-action" title="Edit this transaction" aria-label="Edit ${escapeHtml(tx.description)}">✎</button>
           </div>
         `;
@@ -1225,7 +1242,7 @@
 
   function persist(nextState) {
     if (demoMode) {
-      state = nextState;
+      state = cloneState(nextState);
       global.MintMapApp.state = state;
       return true;
     }
@@ -1234,8 +1251,8 @@
       setStatus(saveResult.error.message, "error");
       return false;
     }
-    state = nextState;
-    realState = state;
+    state = cloneState(nextState);
+    realState = cloneState(state);
     global.MintMapApp.state = state;
     return true;
   }
@@ -1441,7 +1458,7 @@
       }
       nextState = operation.state;
     }
-    realState = state;
+    realState = cloneState(state);
     state = nextState;
     demoMode = true;
     render();
@@ -1452,7 +1469,12 @@
     if (!demoMode) {
       return;
     }
-    state = realState;
+    const loadResult = global.MintMapState.loadState();
+    if (!loadResult.ok) {
+      setStatus(loadResult.error.message, "error");
+      return;
+    }
+    state = cloneState(loadResult.state);
     realState = null;
     demoMode = false;
     editingTransactionId = null;
@@ -1630,7 +1652,7 @@
             setActiveNavigation(target.link);
           }
         }
-      }, { rootMargin: "-6rem 0px -55% 0px", threshold: [0.1, 0.5, 1] });
+      }, { rootMargin: "-96px 0px -55% 0px", threshold: [0.1, 0.5, 1] });
       navigationSections.forEach(({ section }) => sectionObserver.observe(section));
     }
 
