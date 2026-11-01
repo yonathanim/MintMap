@@ -44,9 +44,9 @@
           </span>
         </a>
         <nav class="site-nav" aria-label="Primary navigation">
-          <a class="nav-link active" href="#summary-heading">Overview</a>
-          <a class="nav-link" href="#transactions-heading">Transactions</a>
-          <a class="nav-link" href="#categories-heading">Categories</a>
+          <a class="nav-link active" href="#overview-section">Overview</a>
+          <a class="nav-link" href="#transactions-section">Transactions</a>
+          <a class="nav-link" href="#categories-section">Categories</a>
         </nav>
         <div class="header-actions">
           <div class="header-search-wrap">
@@ -64,31 +64,10 @@
               <div id="search-live-results" class="search-live-results"></div>
             </div>
           </div>
-          <button id="mobile-search-toggle" class="utility-button mobile-search-btn" type="button" aria-label="Search transactions" aria-expanded="false" aria-controls="mobile-search-panel">
-            <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          </button>
           <button id="theme-toggle" class="utility-button" type="button" aria-label="Switch to light theme" aria-pressed="false"><span aria-hidden="true">☼</span><span>Light mode</span></button>
         </div>
       </div>
     </header>
-
-    <div id="mobile-search-panel" class="mobile-search-panel" hidden>
-      <div class="container mobile-search-inner">
-        <label class="mobile-search-label">
-          <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <span class="sr-only">Search transactions</span>
-          <input id="mobile-search-input" type="search" placeholder="Search transactions…" aria-label="Search transactions" autocomplete="off">
-        </label>
-        <button id="mobile-search-close" class="button button-secondary mobile-search-cancel" type="button">Close</button>
-      </div>
-      <div id="mobile-search-dropdown" class="search-live-dropdown mobile-live-dropdown" hidden role="region" aria-label="Mobile search matches">
-        <div class="search-live-head">
-          <span id="mobile-search-live-count" class="search-live-count">0 matches</span>
-          <button id="mobile-search-live-clear" class="search-live-clear" type="button">Clear</button>
-        </div>
-        <div id="mobile-search-live-results" class="search-live-results"></div>
-      </div>
-    </div>
 
     <main id="main-content" class="container page-content">
       <section class="intro" aria-labelledby="page-title">
@@ -101,7 +80,7 @@
         <button id="launch-demo" class="button button-secondary intro-demo-button" type="button">Explore fictional demo</button>
       </section>
 
-      <section class="summary-grid" aria-labelledby="summary-heading">
+      <section id="overview-section" class="summary-grid" aria-labelledby="summary-heading">
         <div class="section-heading">
           <div>
             <p class="eyebrow">At a glance</p>
@@ -224,7 +203,7 @@
         </section>
       </div>
 
-      <section class="panel transactions-section" aria-labelledby="transactions-heading">
+      <section id="transactions-section" class="panel transactions-section" aria-labelledby="transactions-heading">
         <div class="section-heading section-heading-stack">
           <div>
             <p class="eyebrow">Your activity</p>
@@ -266,7 +245,7 @@
         <button id="exit-demo" class="button button-secondary" type="button">Exit Demo</button>
       </section>
 
-      <section class="panel category-section" aria-labelledby="categories-heading">
+      <section id="categories-section" class="panel category-section" aria-labelledby="categories-heading">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Stay organized</p>
